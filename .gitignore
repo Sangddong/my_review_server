@@ -38,3 +38,9 @@ out/
 
 ### Cursor ###
 .cursor/
+
+### Local secrets (never commit) ###
+/application-local-secret.properties
+.env
+.env.*
+
