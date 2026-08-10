@@ -30,6 +30,11 @@ class OpenApiDocsTest {
 		mockMvc.perform(get("/v3/api-docs"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.openapi").exists())
-			.andExpect(jsonPath("$.info.title").value("My Review Server API"));
+			.andExpect(jsonPath("$.info.title").value("My Review Server API"))
+			.andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists())
+			.andExpect(jsonPath("$.tags[?(@.name=='Auth')]").isArray())
+			.andExpect(jsonPath("$.paths['/api/auth/naver'].post").exists())
+			.andExpect(jsonPath("$.paths['/api/auth/kakao'].post").exists())
+			.andExpect(jsonPath("$.paths['/api/auth/google'].post").exists());
 	}
 }
