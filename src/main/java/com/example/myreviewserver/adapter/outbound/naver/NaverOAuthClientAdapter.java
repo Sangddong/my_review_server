@@ -1,7 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.naver;
 
-import com.example.myreviewserver.application.auth.NaverOAuthClient;
-import com.example.myreviewserver.application.auth.NaverUserProfile;
+import com.example.myreviewserver.application.auth.naver.NaverOAuthClient;
+import com.example.myreviewserver.application.auth.naver.NaverUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

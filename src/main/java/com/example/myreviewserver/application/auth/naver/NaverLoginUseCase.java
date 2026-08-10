@@ -1,4 +1,8 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.naver;
+
+import com.example.myreviewserver.application.auth.AuthTokenResult;
+import com.example.myreviewserver.application.auth.SocialLoginCommand;
+import com.example.myreviewserver.application.auth.SocialLoginUseCase;
 
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.AuthProvider;

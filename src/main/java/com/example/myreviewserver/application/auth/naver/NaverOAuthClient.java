@@ -1,4 +1,4 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.naver;
 
 /**
  * Port for talking to Naver OAuth APIs.
