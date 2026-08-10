@@ -8,10 +8,12 @@ CREATE TABLE users (
   email VARCHAR(320) NULL,
   nickname VARCHAR(100) NOT NULL,
   is_deleted TINYINT NULL DEFAULT NULL,
+  deleted_at TIMESTAMP NULL DEFAULT NULL,
   last_login_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_users_email (email),
+  KEY idx_users_deleted_at (deleted_at),
   CONSTRAINT chk_users_is_deleted
     CHECK (is_deleted IS NULL OR is_deleted = 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
