@@ -1,6 +1,6 @@
 -- Core schema for my_review (MySQL)
 -- Naming: snake_case columns, UPPER_SNAKE domain strings, is_* flags
--- Per-user platforms: each user gets copies of platform_templates on signup (app logic later)
+-- Default 6 platforms per user are inserted by app on signup (not a separate templates table)
 
 CREATE TABLE users (
   id BIGINT NOT NULL AUTO_INCREMENT,
@@ -9,19 +9,7 @@ CREATE TABLE users (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Fixed default platform catalog (shared definition). Not edited by end users.
-CREATE TABLE platform_templates (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  color VARCHAR(100) NOT NULL,
-  sort_order INT NOT NULL DEFAULT 0,
-  created_at DATETIME(3) NOT NULL,
-  updated_at DATETIME(3) NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_platform_templates_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- User-owned platforms (copied from templates; user may edit / soft-hide)
+-- User-owned platforms (edit / soft-hide per user)
 CREATE TABLE platforms (
   id BIGINT NOT NULL AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
@@ -101,12 +89,3 @@ CREATE TABLE experience_registered_platforms (
       REFERENCES experience_platforms (experience_id, platform_id)
       ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO platform_templates (id, name, color, sort_order, created_at, updated_at)
-VALUES
-  (1, '블로그', 'var(--color-chip-blog)', 0, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000'),
-  (2, '구글 리뷰', 'var(--color-chip-google)', 1, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000'),
-  (3, '클립', 'var(--color-chip-clip)', 2, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000'),
-  (4, '릴스', 'var(--color-chip-reels)', 3, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000'),
-  (5, '쇼츠', 'var(--color-chip-shorts)', 4, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000'),
-  (6, '영수증 리뷰', 'var(--color-chip-receipt)', 5, '1970-01-01 00:00:00.000', '1970-01-01 00:00:00.000');
