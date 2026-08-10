@@ -1,4 +1,8 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.kakao;
+
+import com.example.myreviewserver.application.auth.AuthTokenResult;
+import com.example.myreviewserver.application.auth.SocialLoginCommand;
+import com.example.myreviewserver.application.auth.SocialLoginUseCase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

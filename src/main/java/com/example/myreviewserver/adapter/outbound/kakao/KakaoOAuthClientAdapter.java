@@ -1,7 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.kakao;
 
-import com.example.myreviewserver.application.auth.KakaoOAuthClient;
-import com.example.myreviewserver.application.auth.KakaoUserProfile;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthClient;
+import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;

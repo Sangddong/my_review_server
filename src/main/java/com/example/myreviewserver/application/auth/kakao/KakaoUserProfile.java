@@ -1,4 +1,4 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.kakao;
 
 /**
  * Verified profile fetched from Kakao after exchanging the authorization code.

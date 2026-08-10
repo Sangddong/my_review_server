@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.myreviewserver.application.auth.KakaoOAuthClient;
-import com.example.myreviewserver.application.auth.KakaoUserProfile;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthClient;
+import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

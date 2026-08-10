@@ -1,4 +1,4 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.kakao;
 
 /**
  * Port for talking to Kakao OAuth APIs.

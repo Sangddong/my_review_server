@@ -2,7 +2,7 @@ package com.example.myreviewserver.adapter.inbound.web.auth;
 
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.auth.AuthTokenResult;
-import com.example.myreviewserver.application.auth.NaverLoginUseCase;
+import com.example.myreviewserver.application.auth.naver.NaverLoginUseCase;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

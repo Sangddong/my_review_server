@@ -1,4 +1,4 @@
-package com.example.myreviewserver.application.auth;
+package com.example.myreviewserver.application.auth.naver;
 
 /**
  * Verified profile fetched from Naver after exchanging the authorization code.

@@ -7,7 +7,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.example.myreviewserver.application.auth.KakaoUserProfile;
+import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
