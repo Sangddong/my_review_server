@@ -80,14 +80,6 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<Platform> findDeletedByUserIdAndName(Long userId, String name) {
-		return springDataPlatformRepository
-			.findFirstByUserIdAndNameAndIsDeletedOrderByIdDesc(userId, name, 1)
-			.map(PlatformPersistenceMapper::toDomain);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
 	public int findNextSortOrder(Long userId) {
 		return springDataPlatformRepository.findNextSortOrder(userId);
 	}

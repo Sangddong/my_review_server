@@ -27,7 +27,7 @@ class CreatePlatformUseCaseTest {
 	UserRepository userRepository;
 
 	@Test
-	void createsAtEndRestoresDeletedAndRejectsDuplicate() {
+	void createsAtEndRejectsActiveDuplicateAndIgnoresDeletedName() {
 		User user = userRepository.save(User.create("create@test.com", "creator"));
 
 		Platform first = createPlatformUseCase.execute(user.getId(), "블로그", "#c6f8c8");
@@ -42,10 +42,11 @@ class CreatePlatformUseCaseTest {
 		first.softDelete();
 		platformRepository.save(first);
 
-		Platform restored = createPlatformUseCase.execute(user.getId(), "블로그", "#112233");
-		assertThat(restored.getId()).isEqualTo(first.getId());
-		assertThat(restored.isActive()).isTrue();
-		assertThat(restored.getColor()).isEqualTo("#112233");
-		assertThat(restored.getSortOrder()).isEqualTo(2);
+		Platform recreated = createPlatformUseCase.execute(user.getId(), "블로그", "#112233");
+		assertThat(recreated.getId()).isNotEqualTo(first.getId());
+		assertThat(recreated.isActive()).isTrue();
+		assertThat(recreated.getColor()).isEqualTo("#112233");
+		assertThat(recreated.getSortOrder()).isEqualTo(2);
+		assertThat(platformRepository.findById(first.getId()).orElseThrow().isActive()).isFalse();
 	}
 }

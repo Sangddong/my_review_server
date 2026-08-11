@@ -85,18 +85,6 @@ public class Platform {
 		this.isDeleted = 1;
 	}
 
-	public void restore(String color, int sortOrder) {
-		if (isActive()) {
-			throw new DomainException("Platform is not deleted");
-		}
-		if (sortOrder < 0) {
-			throw new DomainException("sortOrder must be >= 0");
-		}
-		this.isDeleted = null;
-		this.color = normalizeColor(color);
-		this.sortOrder = sortOrder;
-	}
-
 	public boolean isActive() {
 		return isDeleted == null;
 	}

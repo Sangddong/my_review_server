@@ -76,14 +76,14 @@ public class PlatformController {
 		summary = "플랫폼 생성",
 		description = """
 			로그인한 사용자 플랫폼을 목록 맨 뒤에 추가합니다.
-			같은 이름의 활성 플랫폼이 있으면 400,
-			soft delete된 동일 이름이 있으면 복구 후 맨 뒤로 이동합니다.
+			같은 이름의 활성 플랫폼이 있으면 400입니다.
+			soft delete된 동일 이름은 무시하고 새 행을 만듭니다.
 			"""
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "201",
-			description = "생성 또는 복구 성공",
+			description = "생성 성공",
 			content = @Content(schema = @Schema(implementation = PlatformApiResponse.class))
 		),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "검증 실패 또는 이름 중복"),
