@@ -31,17 +31,17 @@ class ListPlatformsUseCaseTest {
 		User other = userRepository.save(User.create("other@test.com", "other"));
 
 		Platform second = platformRepository.save(
-			Platform.create(owner.getId(), "유튜브", "var(--color-chip-youtube)", 1)
+			Platform.create(owner.getId(), "유튜브", "#f8dac6", 1)
 		);
 		Platform first = platformRepository.save(
-			Platform.create(owner.getId(), "블로그", "var(--color-chip-blog)", 0)
+			Platform.create(owner.getId(), "블로그", "#c6f8c8", 0)
 		);
 		Platform deleted = platformRepository.save(
-			Platform.create(owner.getId(), "숨김", "var(--color-chip-hidden)", 2)
+			Platform.create(owner.getId(), "숨김", "#dddddd", 2)
 		);
 		deleted.softDelete();
 		platformRepository.save(deleted);
-		platformRepository.save(Platform.create(other.getId(), "남의것", "var(--color-chip-other)", 0));
+		platformRepository.save(Platform.create(other.getId(), "남의것", "#c6e4f8", 0));
 
 		List<Platform> result = listPlatformsUseCase.execute(owner.getId());
 

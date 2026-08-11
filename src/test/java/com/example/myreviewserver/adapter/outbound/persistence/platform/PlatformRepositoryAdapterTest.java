@@ -31,7 +31,7 @@ class PlatformRepositoryAdapterTest {
 	@Test
 	void savesListsAndSoftDeletes() {
 		Platform created = platformRepository.save(
-			Platform.create(1L, "블로그", "var(--color-chip-blog)", platformRepository.findNextSortOrder(1L))
+			Platform.create(1L, "블로그", "#c6f8c8", platformRepository.findNextSortOrder(1L))
 		);
 
 		assertThat(created.getId()).isNotNull();

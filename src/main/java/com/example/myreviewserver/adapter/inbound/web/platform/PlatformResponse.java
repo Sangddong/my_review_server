@@ -11,7 +11,7 @@ public record PlatformResponse(
 	@Schema(description = "이름", example = "블로그")
 	String name,
 
-	@Schema(description = "색상", example = "var(--color-chip-blog)")
+	@Schema(description = "HEX 색상 코드", example = "#c6f8c8")
 	String color,
 
 	@Schema(description = "정렬 순서 (작을수록 앞)", example = "0")

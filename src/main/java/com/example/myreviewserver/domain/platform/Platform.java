@@ -42,11 +42,10 @@ public class Platform {
 	public static Platform create(Long userId, String name, String color, int sortOrder) {
 		validateUserId(userId);
 		validateName(name);
-		validateColor(color);
 		if (sortOrder < 0) {
 			throw new DomainException("sortOrder must be >= 0");
 		}
-		return new Platform(null, userId, name.trim(), color.trim(), sortOrder, null, null, null);
+		return new Platform(null, userId, name.trim(), normalizeColor(color), sortOrder, null, null, null);
 	}
 
 	public static Platform restore(
@@ -70,8 +69,7 @@ public class Platform {
 
 	public void changeColor(String color) {
 		ensureActive();
-		validateColor(color);
-		this.color = color.trim();
+		this.color = normalizeColor(color);
 	}
 
 	public void changeSortOrder(int sortOrder) {
@@ -144,13 +142,20 @@ public class Platform {
 		}
 	}
 
-	private static void validateColor(String color) {
+	private static String normalizeColor(String color) {
 		if (color == null || color.isBlank()) {
 			throw new DomainException("color is required");
 		}
-		if (color.trim().length() > 100) {
-			throw new DomainException("color must be <= 100 characters");
+		String value = color.trim().toLowerCase();
+		if (value.matches("#[0-9a-f]{6}")) {
+			return value;
 		}
+		if (value.matches("#[0-9a-f]{3}")) {
+			return "#" + value.charAt(1) + value.charAt(1)
+				+ value.charAt(2) + value.charAt(2)
+				+ value.charAt(3) + value.charAt(3);
+		}
+		throw new DomainException("color must be a hex code like #c6f8c8");
 	}
 
 	@Override

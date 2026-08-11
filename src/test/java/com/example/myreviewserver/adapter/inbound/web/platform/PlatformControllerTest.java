@@ -39,8 +39,8 @@ class PlatformControllerTest {
 		User user = userRepository.save(User.create("plat@test.com", "platUser"));
 		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
 
-		platformRepository.save(Platform.create(user.getId(), "블로그", "blog", 0));
-		Platform hidden = platformRepository.save(Platform.create(user.getId(), "숨김", "hidden", 1));
+		platformRepository.save(Platform.create(user.getId(), "블로그", "#c6f8c8", 0));
+		Platform hidden = platformRepository.save(Platform.create(user.getId(), "숨김", "#dddddd", 1));
 		hidden.softDelete();
 		platformRepository.save(hidden);
 
@@ -53,7 +53,7 @@ class PlatformControllerTest {
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data.length()").value(1))
 			.andExpect(jsonPath("$.data[0].name").value("블로그"))
-			.andExpect(jsonPath("$.data[0].color").value("blog"))
+			.andExpect(jsonPath("$.data[0].color").value("#c6f8c8"))
 			.andExpect(jsonPath("$.data[0].sortOrder").value(0))
 			.andExpect(jsonPath("$.data[0].id").isNumber());
 	}
