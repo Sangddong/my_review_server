@@ -70,10 +70,4 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 			.map(PlatformPersistenceMapper::toDomain)
 			.toList();
 	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public int findNextSortOrder(Long userId) {
-		return springDataPlatformRepository.findNextSortOrder(userId);
-	}
 }
