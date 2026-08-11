@@ -17,6 +17,14 @@ public interface SpringDataPlatformRepository extends JpaRepository<PlatformJpaE
 
 	List<PlatformJpaEntity> findByUserIdAndIsDeletedIsNullOrderBySortOrderAscIdAsc(Long userId);
 
+	Optional<PlatformJpaEntity> findFirstByUserIdAndNameAndIsDeletedIsNull(Long userId, String name);
+
+	Optional<PlatformJpaEntity> findFirstByUserIdAndNameAndIsDeletedOrderByIdDesc(
+		Long userId,
+		String name,
+		Integer isDeleted
+	);
+
 	@Query("""
 		select coalesce(max(p.sortOrder), -1) + 1
 		from PlatformJpaEntity p

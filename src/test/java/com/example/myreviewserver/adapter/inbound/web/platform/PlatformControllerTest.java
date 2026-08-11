@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.platform;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -56,5 +58,31 @@ class PlatformControllerTest {
 			.andExpect(jsonPath("$.data[0].color").value("#c6f8c8"))
 			.andExpect(jsonPath("$.data[0].sortOrder").value(0))
 			.andExpect(jsonPath("$.data[0].id").isNumber());
+	}
+
+	@Test
+	void createsPlatformForAuthenticatedUser() throws Exception {
+		User user = userRepository.save(User.create("create-api@test.com", "creator"));
+		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+
+		mockMvc.perform(post("/api/platforms")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"블로그","color":"#c6f8c8"}
+					"""))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/api/platforms")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"블로그","color":"#c6f8c8"}
+					"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.name").value("블로그"))
+			.andExpect(jsonPath("$.data.color").value("#c6f8c8"))
+			.andExpect(jsonPath("$.data.sortOrder").value(0))
+			.andExpect(jsonPath("$.data.id").isNumber());
 	}
 }

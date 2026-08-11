@@ -21,6 +21,11 @@ class PlatformTest {
 		assertThat(platform.getIsDeleted()).isEqualTo(1);
 		assertThatThrownBy(() -> platform.rename("블로그2"))
 			.isInstanceOf(DomainException.class);
+
+		platform.restore("#aabbcc", 3);
+		assertThat(platform.isActive()).isTrue();
+		assertThat(platform.getColor()).isEqualTo("#aabbcc");
+		assertThat(platform.getSortOrder()).isEqualTo(3);
 	}
 
 	@Test
