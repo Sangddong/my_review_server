@@ -3,11 +3,12 @@ package com.example.myreviewserver.application.platform;
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Creates a new platform at the end of the user's list.
+ * Creates a new platform at the end of the user's active list.
  * Soft-deleted platforms with the same name are ignored.
  *
  * @Service: 서비스 빈.
@@ -35,11 +36,12 @@ public class CreatePlatformUseCase {
 		}
 
 		String trimmedName = name.trim();
-		if (platformRepository.findActiveByUserIdAndName(userId, trimmedName).isPresent()) {
+		List<Platform> active = platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(userId);
+		boolean nameExists = active.stream().anyMatch(platform -> platform.getName().equals(trimmedName));
+		if (nameExists) {
 			throw new DomainException("Platform name already exists");
 		}
 
-		int sortOrder = platformRepository.findNextSortOrder(userId);
-		return platformRepository.save(Platform.create(userId, trimmedName, color, sortOrder));
+		return platformRepository.save(Platform.create(userId, trimmedName, color, active.size()));
 	}
 }

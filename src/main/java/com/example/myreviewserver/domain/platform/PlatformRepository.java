@@ -16,8 +16,4 @@ public interface PlatformRepository {
 	Optional<Platform> findByIdAndUserId(Long id, Long userId);
 
 	List<Platform> findActiveByUserIdOrderBySortOrderAscIdAsc(Long userId);
-
-	Optional<Platform> findActiveByUserIdAndName(Long userId, String name);
-
-	int findNextSortOrder(Long userId);
 }

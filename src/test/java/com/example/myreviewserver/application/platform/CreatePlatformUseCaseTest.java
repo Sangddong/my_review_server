@@ -46,7 +46,7 @@ class CreatePlatformUseCaseTest {
 		assertThat(recreated.getId()).isNotEqualTo(first.getId());
 		assertThat(recreated.isActive()).isTrue();
 		assertThat(recreated.getColor()).isEqualTo("#112233");
-		assertThat(recreated.getSortOrder()).isEqualTo(2);
+		assertThat(recreated.getSortOrder()).isEqualTo(1);
 		assertThat(platformRepository.findById(first.getId()).orElseThrow().isActive()).isFalse();
 	}
 }
