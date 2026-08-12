@@ -77,4 +77,25 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 			.map(PlatformPersistenceMapper::toDomain)
 			.toList();
 	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean existsActiveByUserIdAndNameExcludingId(Long userId, String name, Long excludeId) {
+		return springDataPlatformRepository
+			.existsByUserIdAndNameAndIsDeletedIsNullAndIdNot(userId, name, excludeId);
+	}
+
+	@Override
+	public Optional<Platform> updateActiveByIdAndUserId(Long id, Long userId, String name, String color) {
+		int updated = springDataPlatformRepository.updateActiveByIdAndUserId(id, userId, name, color);
+		if (updated == 0) {
+			return Optional.empty();
+		}
+		return findByIdAndUserId(id, userId);
+	}
+
+	@Override
+	public boolean softDeleteActiveByIdAndUserId(Long id, Long userId) {
+		return springDataPlatformRepository.softDeleteActiveByIdAndUserId(id, userId) > 0;
+	}
 }

@@ -3,7 +3,7 @@ package com.example.myreviewserver.application.platform;
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
-import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,25 +38,22 @@ public class UpdatePlatformUseCase {
 			throw new DomainException("name or color is required");
 		}
 
-		Platform platform = platformRepository.findActiveByIdAndUserId(platformId, userId)
-			.orElseThrow(() -> new DomainException("Platform not found"));
+		String nextName = hasName ? Platform.validatedName(name) : null;
+		String nextColor = hasColor ? Platform.validatedColor(color) : null;
 
-		if (hasName) {
-			String trimmedName = name.trim();
-			if (!trimmedName.equals(platform.getName())) {
-				List<Platform> active = platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(userId);
-				boolean nameExists = active.stream()
-					.anyMatch(existing -> existing.getName().equals(trimmedName));
-				if (nameExists) {
-					throw new DomainException("Platform name already exists");
-				}
-			}
-			platform.rename(name);
-		}
-		if (hasColor) {
-			platform.changeColor(color);
+		Optional<Platform> updated = platformRepository.updateActiveByIdAndUserId(
+			platformId,
+			userId,
+			nextName,
+			nextColor
+		);
+		if (updated.isPresent()) {
+			return updated.get();
 		}
 
-		return platformRepository.save(platform);
+		if (nextName != null && platformRepository.findActiveByIdAndUserId(platformId, userId).isPresent()) {
+			throw new DomainException("Platform name already exists");
+		}
+		throw new DomainException("Platform not found");
 	}
 }

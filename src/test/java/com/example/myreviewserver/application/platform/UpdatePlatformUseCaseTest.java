@@ -72,5 +72,9 @@ class UpdatePlatformUseCaseTest {
 		assertThatThrownBy(() -> updatePlatformUseCase.execute(user.getId(), youtube.getId(), "삭제됨수정", null))
 			.isInstanceOf(DomainException.class)
 			.hasMessageContaining("not found");
+
+		assertThatThrownBy(() -> updatePlatformUseCase.execute(user.getId(), youtube.getId(), "브런치", null))
+			.isInstanceOf(DomainException.class)
+			.hasMessageContaining("not found");
 	}
 }

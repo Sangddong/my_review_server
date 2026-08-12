@@ -1,6 +1,5 @@
 package com.example.myreviewserver.application.platform;
 
-import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import org.springframework.stereotype.Service;
@@ -31,10 +30,9 @@ public class DeletePlatformUseCase {
 			throw new DomainException("platformId is required");
 		}
 
-		Platform platform = platformRepository.findActiveByIdAndUserId(platformId, userId)
-			.orElseThrow(() -> new DomainException("Platform not found"));
-
-		platform.softDelete();
-		platformRepository.save(platform);
+		boolean deleted = platformRepository.softDeleteActiveByIdAndUserId(platformId, userId);
+		if (!deleted) {
+			throw new DomainException("Platform not found");
+		}
 	}
 }
