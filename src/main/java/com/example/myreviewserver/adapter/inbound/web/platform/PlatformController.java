@@ -3,6 +3,7 @@ package com.example.myreviewserver.adapter.inbound.web.platform;
 import com.example.myreviewserver.adapter.inbound.security.CurrentUser;
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.platform.CreatePlatformUseCase;
+import com.example.myreviewserver.application.platform.DeletePlatformUseCase;
 import com.example.myreviewserver.application.platform.ListPlatformsUseCase;
 import com.example.myreviewserver.application.platform.UpdatePlatformUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,15 +41,18 @@ public class PlatformController {
 	private final ListPlatformsUseCase listPlatformsUseCase;
 	private final CreatePlatformUseCase createPlatformUseCase;
 	private final UpdatePlatformUseCase updatePlatformUseCase;
+	private final DeletePlatformUseCase deletePlatformUseCase;
 
 	public PlatformController(
 		ListPlatformsUseCase listPlatformsUseCase,
 		CreatePlatformUseCase createPlatformUseCase,
-		UpdatePlatformUseCase updatePlatformUseCase
+		UpdatePlatformUseCase updatePlatformUseCase,
+		DeletePlatformUseCase deletePlatformUseCase
 	) {
 		this.listPlatformsUseCase = listPlatformsUseCase;
 		this.createPlatformUseCase = createPlatformUseCase;
 		this.updatePlatformUseCase = updatePlatformUseCase;
+		this.deletePlatformUseCase = deletePlatformUseCase;
 	}
 
 	@GetMapping
@@ -137,5 +142,33 @@ public class PlatformController {
 		return ApiResponse.ok(PlatformResponse.from(
 			updatePlatformUseCase.execute(userId, id, request.name(), request.color())
 		));
+	}
+
+	/**
+	 * @DeleteMapping: HTTP DELETE만 받음.
+	 * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
+	 * @ResponseStatus: 성공 시 HTTP 204.
+	 */
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@Operation(
+		summary = "플랫폼 삭제",
+		description = """
+			로그인한 사용자의 활성 플랫폼을 soft delete합니다. 행은 남기고 is_deleted만 표시합니다.
+			체험에 연결된 데이터는 그대로 둡니다.
+			없거나 다른 사용자 것이거나 이미 삭제된 플랫폼은 400입니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "400",
+			description = "없거나 이미 삭제된 플랫폼"
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public void delete(@PathVariable Long id) {
+		Long userId = CurrentUser.requireUserId();
+		deletePlatformUseCase.execute(userId, id);
 	}
 }
