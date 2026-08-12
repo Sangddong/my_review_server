@@ -100,7 +100,35 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 	}
 
 	@Override
-	public boolean updateActiveSortOrderByIdAndUserId(Long id, Long userId, int sortOrder) {
-		return springDataPlatformRepository.updateActiveSortOrderByIdAndUserId(id, userId, sortOrder) > 0;
+	public boolean reorderActiveByUserId(Long userId, List<Long> orderedIds) {
+		if (orderedIds.isEmpty()) {
+			return true;
+		}
+
+		StringBuilder caseExpr = new StringBuilder("CASE p.id ");
+		for (int index = 0; index < orderedIds.size(); index++) {
+			caseExpr.append("WHEN :id").append(index)
+				.append(" THEN :ord").append(index)
+				.append(' ');
+		}
+		caseExpr.append("ELSE p.sortOrder END");
+
+		var query = entityManager.createQuery("""
+			update PlatformJpaEntity p
+			set p.sortOrder = %s
+			where p.userId = :userId
+			  and p.isDeleted is null
+			  and p.id in :ids
+			""".formatted(caseExpr));
+		query.setParameter("userId", userId);
+		query.setParameter("ids", orderedIds);
+		for (int index = 0; index < orderedIds.size(); index++) {
+			query.setParameter("id" + index, orderedIds.get(index));
+			query.setParameter("ord" + index, index);
+		}
+
+		int updated = query.executeUpdate();
+		entityManager.clear();
+		return updated == orderedIds.size();
 	}
 }

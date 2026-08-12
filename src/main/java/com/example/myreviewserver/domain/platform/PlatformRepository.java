@@ -34,7 +34,8 @@ public interface PlatformRepository {
 	boolean softDeleteActiveByIdAndUserId(Long id, Long userId);
 
 	/**
-	 * Updates sortOrder of an active platform. Returns false when no active row matched.
+	 * Sets sortOrder of active platforms in one UPDATE (CASE WHEN).
+	 * orderedIds index becomes sortOrder. Returns false when updated row count mismatches.
 	 */
-	boolean updateActiveSortOrderByIdAndUserId(Long id, Long userId, int sortOrder);
+	boolean reorderActiveByUserId(Long userId, List<Long> orderedIds);
 }

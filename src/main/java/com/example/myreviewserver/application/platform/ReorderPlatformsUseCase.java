@@ -51,15 +51,9 @@ public class ReorderPlatformsUseCase {
 			throw new DomainException("orderedIds must match active platforms exactly");
 		}
 
-		for (int index = 0; index < orderedIds.size(); index++) {
-			boolean updated = platformRepository.updateActiveSortOrderByIdAndUserId(
-				orderedIds.get(index),
-				userId,
-				index
-			);
-			if (!updated) {
-				throw new DomainException("Platform not found");
-			}
+		boolean reordered = platformRepository.reorderActiveByUserId(userId, orderedIds);
+		if (!reordered) {
+			throw new DomainException("Platform not found");
 		}
 
 		return platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(userId);
