@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.platform;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,5 +85,49 @@ class PlatformControllerTest {
 			.andExpect(jsonPath("$.data.color").value("#c6f8c8"))
 			.andExpect(jsonPath("$.data.sortOrder").value(0))
 			.andExpect(jsonPath("$.data.id").isNumber());
+	}
+
+	@Test
+	void updatesPlatformForAuthenticatedUser() throws Exception {
+		User user = userRepository.save(User.create("update-api@test.com", "updater"));
+		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#c6f8c8", 0));
+
+		mockMvc.perform(patch("/api/platforms/" + platform.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"브런치"}
+					"""))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(patch("/api/platforms/" + platform.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"브런치","color":"#112233"}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.name").value("브런치"))
+			.andExpect(jsonPath("$.data.color").value("#112233"))
+			.andExpect(jsonPath("$.data.id").value(platform.getId()));
+
+		mockMvc.perform(patch("/api/platforms/" + platform.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+			.andExpect(status().isBadRequest());
+
+		platform.softDelete();
+		platformRepository.save(platform);
+
+		mockMvc.perform(patch("/api/platforms/" + platform.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"삭제됨"}
+					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Platform not found"));
 	}
 }
