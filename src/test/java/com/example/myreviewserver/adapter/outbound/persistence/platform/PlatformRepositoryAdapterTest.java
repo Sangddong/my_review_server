@@ -41,6 +41,7 @@ class PlatformRepositoryAdapterTest {
 		platformRepository.save(created);
 
 		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L)).isEmpty();
+		assertThat(platformRepository.findActiveByIdAndUserId(created.getId(), 1L)).isEmpty();
 		assertThat(platformRepository.findById(created.getId())).isPresent();
 	}
 }

@@ -11,5 +11,7 @@ public interface SpringDataPlatformRepository extends JpaRepository<PlatformJpaE
 
 	Optional<PlatformJpaEntity> findByIdAndUserId(Long id, Long userId);
 
+	Optional<PlatformJpaEntity> findByIdAndUserIdAndIsDeletedIsNull(Long id, Long userId);
+
 	List<PlatformJpaEntity> findByUserIdAndIsDeletedIsNullOrderBySortOrderAscIdAsc(Long userId);
 }

@@ -38,8 +38,7 @@ public class UpdatePlatformUseCase {
 			throw new DomainException("name or color is required");
 		}
 
-		Platform platform = platformRepository.findByIdAndUserId(platformId, userId)
-			.filter(Platform::isActive)
+		Platform platform = platformRepository.findActiveByIdAndUserId(platformId, userId)
 			.orElseThrow(() -> new DomainException("Platform not found"));
 
 		if (hasName) {
