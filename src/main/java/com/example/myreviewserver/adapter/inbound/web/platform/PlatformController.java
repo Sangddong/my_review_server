@@ -4,6 +4,7 @@ import com.example.myreviewserver.adapter.inbound.security.CurrentUser;
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.platform.CreatePlatformUseCase;
 import com.example.myreviewserver.application.platform.ListPlatformsUseCase;
+import com.example.myreviewserver.application.platform.UpdatePlatformUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,13 +38,16 @@ public class PlatformController {
 
 	private final ListPlatformsUseCase listPlatformsUseCase;
 	private final CreatePlatformUseCase createPlatformUseCase;
+	private final UpdatePlatformUseCase updatePlatformUseCase;
 
 	public PlatformController(
 		ListPlatformsUseCase listPlatformsUseCase,
-		CreatePlatformUseCase createPlatformUseCase
+		CreatePlatformUseCase createPlatformUseCase,
+		UpdatePlatformUseCase updatePlatformUseCase
 	) {
 		this.listPlatformsUseCase = listPlatformsUseCase;
 		this.createPlatformUseCase = createPlatformUseCase;
+		this.updatePlatformUseCase = updatePlatformUseCase;
 	}
 
 	@GetMapping
@@ -93,6 +99,43 @@ public class PlatformController {
 		Long userId = CurrentUser.requireUserId();
 		return ApiResponse.ok(PlatformResponse.from(
 			createPlatformUseCase.execute(userId, request.name(), request.color())
+		));
+	}
+
+	/**
+	 * @PatchMapping: HTTP PATCH만 받음.
+	 * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
+	 * @RequestBody: JSON 본문을 UpdatePlatformRequest로 변환.
+	 */
+	@PatchMapping("/{id}")
+	@Operation(
+		summary = "플랫폼 수정",
+		description = """
+			로그인한 사용자의 활성 플랫폼 이름·색상을 부분 수정합니다.
+			name, color 중 하나 이상 필요합니다.
+			없거나 다른 사용자 것이거나 soft delete된 플랫폼은 400입니다.
+			같은 이름의 다른 활성 플랫폼이 있으면 400입니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "수정 성공",
+			content = @Content(schema = @Schema(implementation = PlatformApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "400",
+			description = "검증 실패, 이름 중복, 없거나 삭제된 플랫폼"
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<PlatformResponse> update(
+		@PathVariable Long id,
+		@RequestBody UpdatePlatformRequest request
+	) {
+		Long userId = CurrentUser.requireUserId();
+		return ApiResponse.ok(PlatformResponse.from(
+			updatePlatformUseCase.execute(userId, id, request.name(), request.color())
 		));
 	}
 }
