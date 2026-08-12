@@ -32,4 +32,9 @@ public interface PlatformRepository {
 	 * Soft-deletes an active platform. Returns false when no active row matched.
 	 */
 	boolean softDeleteActiveByIdAndUserId(Long id, Long userId);
+
+	/**
+	 * Updates sortOrder of an active platform. Returns false when no active row matched.
+	 */
+	boolean updateActiveSortOrderByIdAndUserId(Long id, Long userId, int sortOrder);
 }

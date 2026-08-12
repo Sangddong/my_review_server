@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -159,5 +160,42 @@ class PlatformControllerTest {
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Platform not found"));
+	}
+
+	@Test
+	void reordersPlatformsForAuthenticatedUser() throws Exception {
+		User user = userRepository.save(User.create("reorder-api@test.com", "reord"));
+		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+		Platform first = platformRepository.save(Platform.create(user.getId(), "블로그", "#c6f8c8", 0));
+		Platform second = platformRepository.save(Platform.create(user.getId(), "유튜브", "#f8dac6", 1));
+
+		mockMvc.perform(put("/api/platforms/reorder")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"orderedIds":[%d,%d]}
+					""".formatted(second.getId(), first.getId())))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(put("/api/platforms/reorder")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"orderedIds":[%d,%d]}
+					""".formatted(second.getId(), first.getId())))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.length()").value(2))
+			.andExpect(jsonPath("$.data[0].id").value(second.getId()))
+			.andExpect(jsonPath("$.data[0].sortOrder").value(0))
+			.andExpect(jsonPath("$.data[1].id").value(first.getId()))
+			.andExpect(jsonPath("$.data[1].sortOrder").value(1));
+
+		mockMvc.perform(put("/api/platforms/reorder")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"orderedIds":[%d]}
+					""".formatted(first.getId())))
+			.andExpect(status().isBadRequest());
 	}
 }

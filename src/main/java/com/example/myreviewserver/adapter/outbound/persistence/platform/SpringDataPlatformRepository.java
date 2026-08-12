@@ -62,4 +62,18 @@ public interface SpringDataPlatformRepository extends JpaRepository<PlatformJpaE
 		@Param("id") Long id,
 		@Param("userId") Long userId
 	);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("""
+		update PlatformJpaEntity p
+		set p.sortOrder = :sortOrder
+		where p.id = :id
+		  and p.userId = :userId
+		  and p.isDeleted is null
+		""")
+	int updateActiveSortOrderByIdAndUserId(
+		@Param("id") Long id,
+		@Param("userId") Long userId,
+		@Param("sortOrder") int sortOrder
+	);
 }

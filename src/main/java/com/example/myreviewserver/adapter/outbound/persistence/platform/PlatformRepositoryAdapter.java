@@ -98,4 +98,9 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 	public boolean softDeleteActiveByIdAndUserId(Long id, Long userId) {
 		return springDataPlatformRepository.softDeleteActiveByIdAndUserId(id, userId) > 0;
 	}
+
+	@Override
+	public boolean updateActiveSortOrderByIdAndUserId(Long id, Long userId, int sortOrder) {
+		return springDataPlatformRepository.updateActiveSortOrderByIdAndUserId(id, userId, sortOrder) > 0;
+	}
 }
