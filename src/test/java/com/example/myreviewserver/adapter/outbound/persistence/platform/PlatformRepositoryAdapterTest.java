@@ -37,11 +37,27 @@ class PlatformRepositoryAdapterTest {
 		assertThat(created.getId()).isNotNull();
 		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L)).hasSize(1);
 
-		created.softDelete();
-		platformRepository.save(created);
+		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L)).isTrue();
+		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L)).isFalse();
 
 		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L)).isEmpty();
 		assertThat(platformRepository.findActiveByIdAndUserId(created.getId(), 1L)).isEmpty();
 		assertThat(platformRepository.findById(created.getId())).isPresent();
+
+		Platform updated = platformRepository.updateActiveByIdAndUserId(
+			created.getId(),
+			1L,
+			"브런치",
+			"#112233"
+		).orElse(null);
+		assertThat(updated).isNull();
+
+		Platform second = platformRepository.save(Platform.create(1L, "유튜브", "#f8dac6", 1));
+		assertThat(platformRepository.existsActiveByUserIdAndNameExcludingId(1L, "유튜브", created.getId()))
+			.isTrue();
+		Platform renamed = platformRepository.updateActiveByIdAndUserId(second.getId(), 1L, "브런치", null)
+			.orElseThrow();
+		assertThat(renamed.getName()).isEqualTo("브런치");
+		assertThat(renamed.getColor()).isEqualTo("#f8dac6");
 	}
 }

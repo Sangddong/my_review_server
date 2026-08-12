@@ -41,11 +41,19 @@ public class Platform {
 
 	public static Platform create(Long userId, String name, String color, int sortOrder) {
 		validateUserId(userId);
-		validateName(name);
 		if (sortOrder < 0) {
 			throw new DomainException("sortOrder must be >= 0");
 		}
-		return new Platform(null, userId, name.trim(), normalizeColor(color), sortOrder, null, null, null);
+		return new Platform(null, userId, validatedName(name), validatedColor(color), sortOrder, null, null, null);
+	}
+
+	public static String validatedName(String name) {
+		validateName(name);
+		return name.trim();
+	}
+
+	public static String validatedColor(String color) {
+		return normalizeColor(color);
 	}
 
 	public static Platform restore(
@@ -61,15 +69,23 @@ public class Platform {
 		return new Platform(id, userId, name, color, sortOrder, isDeleted, createdAt, updatedAt);
 	}
 
+	public static String requireName(String name) {
+		validateName(name);
+		return name.trim();
+	}
+
+	public static String requireColor(String color) {
+		return normalizeColor(color);
+	}
+
 	public void rename(String name) {
 		ensureActive();
-		validateName(name);
-		this.name = name.trim();
+		this.name = validatedName(name);
 	}
 
 	public void changeColor(String color) {
 		ensureActive();
-		this.color = normalizeColor(color);
+		this.color = validatedColor(color);
 	}
 
 	public void changeSortOrder(int sortOrder) {

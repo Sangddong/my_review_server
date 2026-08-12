@@ -18,4 +18,18 @@ public interface PlatformRepository {
 	Optional<Platform> findActiveByIdAndUserId(Long id, Long userId);
 
 	List<Platform> findActiveByUserIdOrderBySortOrderAscIdAsc(Long userId);
+
+	boolean existsActiveByUserIdAndNameExcludingId(Long userId, String name, Long excludeId);
+
+	/**
+	 * Updates name and/or color of an active platform.
+	 * Null name or color means leave that column unchanged.
+	 * Returns empty when no active row matched.
+	 */
+	Optional<Platform> updateActiveByIdAndUserId(Long id, Long userId, String name, String color);
+
+	/**
+	 * Soft-deletes an active platform. Returns false when no active row matched.
+	 */
+	boolean softDeleteActiveByIdAndUserId(Long id, Long userId);
 }

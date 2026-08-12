@@ -1,5 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.platform;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -127,6 +129,34 @@ class PlatformControllerTest {
 				.content("""
 					{"name":"삭제됨"}
 					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Platform not found"));
+	}
+
+	@Test
+	void softDeletesPlatformForAuthenticatedUser() throws Exception {
+		User user = userRepository.save(User.create("delete-api@test.com", "deleter"));
+		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#c6f8c8", 0));
+		platformRepository.save(Platform.create(user.getId(), "유튜브", "#f8dac6", 1));
+
+		mockMvc.perform(delete("/api/platforms/" + platform.getId()))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/api/platforms/" + platform.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
+			.andExpect(status().isNoContent());
+
+		mockMvc.perform(get("/api/platforms")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.length()").value(1))
+			.andExpect(jsonPath("$.data[0].name").value("유튜브"));
+
+		assertThat(platformRepository.findById(platform.getId()).orElseThrow().isActive()).isFalse();
+
+		mockMvc.perform(delete("/api/platforms/" + platform.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Platform not found"));
 	}
