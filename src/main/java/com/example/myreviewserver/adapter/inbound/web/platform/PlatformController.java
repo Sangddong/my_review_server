@@ -5,6 +5,7 @@ import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.platform.CreatePlatformUseCase;
 import com.example.myreviewserver.application.platform.DeletePlatformUseCase;
 import com.example.myreviewserver.application.platform.ListPlatformsUseCase;
+import com.example.myreviewserver.application.platform.ReorderPlatformsUseCase;
 import com.example.myreviewserver.application.platform.UpdatePlatformUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -42,17 +44,20 @@ public class PlatformController {
 	private final CreatePlatformUseCase createPlatformUseCase;
 	private final UpdatePlatformUseCase updatePlatformUseCase;
 	private final DeletePlatformUseCase deletePlatformUseCase;
+	private final ReorderPlatformsUseCase reorderPlatformsUseCase;
 
 	public PlatformController(
 		ListPlatformsUseCase listPlatformsUseCase,
 		CreatePlatformUseCase createPlatformUseCase,
 		UpdatePlatformUseCase updatePlatformUseCase,
-		DeletePlatformUseCase deletePlatformUseCase
+		DeletePlatformUseCase deletePlatformUseCase,
+		ReorderPlatformsUseCase reorderPlatformsUseCase
 	) {
 		this.listPlatformsUseCase = listPlatformsUseCase;
 		this.createPlatformUseCase = createPlatformUseCase;
 		this.updatePlatformUseCase = updatePlatformUseCase;
 		this.deletePlatformUseCase = deletePlatformUseCase;
+		this.reorderPlatformsUseCase = reorderPlatformsUseCase;
 	}
 
 	@GetMapping
@@ -170,5 +175,38 @@ public class PlatformController {
 	public void delete(@PathVariable Long id) {
 		Long userId = CurrentUser.requireUserId();
 		deletePlatformUseCase.execute(userId, id);
+	}
+
+	/**
+	 * @PutMapping: HTTP PUT만 받음.
+	 * @RequestBody: JSON 본문을 ReorderPlatformsRequest로 변환.
+	 */
+	@PutMapping("/reorder")
+	@Operation(
+		summary = "플랫폼 정렬",
+		description = """
+			로그인한 사용자의 활성 플랫폼 표시 순서를 변경합니다.
+			orderedIds는 활성 플랫폼 id를 빠짐없이, 중복 없이 원하는 순서로 보내야 합니다.
+			soft delete된 플랫폼은 목록에 넣으면 안 됩니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "정렬 성공",
+			content = @Content(schema = @Schema(implementation = PlatformListApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "400",
+			description = "orderedIds가 활성 플랫폼과 일치하지 않음"
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<List<PlatformResponse>> reorder(@RequestBody ReorderPlatformsRequest request) {
+		Long userId = CurrentUser.requireUserId();
+		List<PlatformResponse> platforms = reorderPlatformsUseCase.execute(userId, request.orderedIds()).stream()
+			.map(PlatformResponse::from)
+			.toList();
+		return ApiResponse.ok(platforms);
 	}
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -59,5 +60,13 @@ class PlatformRepositoryAdapterTest {
 			.orElseThrow();
 		assertThat(renamed.getName()).isEqualTo("브런치");
 		assertThat(renamed.getColor()).isEqualTo("#f8dac6");
+
+		Platform a = platformRepository.save(Platform.create(1L, "A", "#aaaaaa", 0));
+		Platform b = platformRepository.save(Platform.create(1L, "B", "#bbbbbb", 1));
+		assertThat(platformRepository.reorderActiveByUserId(1L, List.of(b.getId(), a.getId(), second.getId())))
+			.isTrue();
+		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L))
+			.extracting(Platform::getId)
+			.containsExactly(b.getId(), a.getId(), second.getId());
 	}
 }
