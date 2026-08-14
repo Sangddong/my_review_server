@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Returns the authenticated user's experiences filtered by upcoming or completed.
+ * Returns the authenticated user's upcoming or completed experiences.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션 (readOnly = 조회만).
@@ -23,16 +23,17 @@ public class ListExperiencesUseCase {
 		this.experienceRepository = experienceRepository;
 	}
 
-	public List<Experience> execute(Long userId, ExperienceListStatus status) {
+	public List<Experience> upcoming(Long userId) {
 		if (userId == null) {
 			throw new DomainException("userId is required");
 		}
-		if (status == null) {
-			throw new DomainException("status is required");
-		}
-		if (status == ExperienceListStatus.completed) {
-			return experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(userId);
-		}
 		return experienceRepository.findUpcomingByUserIdOrderByReservationAscIdAsc(userId);
+	}
+
+	public List<Experience> completed(Long userId) {
+		if (userId == null) {
+			throw new DomainException("userId is required");
+		}
+		return experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(userId);
 	}
 }

@@ -1,13 +1,11 @@
 package com.example.myreviewserver.application.experience;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.myreviewserver.domain.experience.Experience;
 import com.example.myreviewserver.domain.experience.ExperiencePlatform;
 import com.example.myreviewserver.domain.experience.ExperienceRepository;
 import com.example.myreviewserver.domain.experience.ExperienceType;
-import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.LocalDate;
@@ -46,7 +44,7 @@ class ListExperiencesUseCaseTest {
 		completed.submitReview();
 		experienceRepository.save(completed);
 
-		List<Experience> upcoming = listExperiencesUseCase.execute(owner.getId(), ExperienceListStatus.upcoming);
+		List<Experience> upcoming = listExperiencesUseCase.upcoming(owner.getId());
 		assertThat(upcoming).extracting(Experience::getName)
 			.containsExactly("같은날아침", "먼저", "나중", "날짜없음");
 		assertThat(upcoming).extracting(Experience::getId)
@@ -58,12 +56,8 @@ class ListExperiencesUseCaseTest {
 			)
 			.doesNotContain(otherOwned.getId(), completed.getId());
 
-		List<Experience> done = listExperiencesUseCase.execute(owner.getId(), ExperienceListStatus.completed);
+		List<Experience> done = listExperiencesUseCase.completed(owner.getId());
 		assertThat(done).extracting(Experience::getId).containsExactly(completed.getId());
-
-		assertThatThrownBy(() -> ExperienceListStatus.from("all"))
-			.isInstanceOf(DomainException.class)
-			.hasMessageContaining("upcoming or completed");
 	}
 
 	private Experience saveUpcoming(Long userId, String name, LocalDate date, LocalTime time) {

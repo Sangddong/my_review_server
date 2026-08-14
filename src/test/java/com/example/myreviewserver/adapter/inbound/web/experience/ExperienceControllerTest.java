@@ -67,12 +67,11 @@ class ExperienceControllerTest {
 		completed.submitReview();
 		experienceRepository.save(completed);
 
-		mockMvc.perform(get("/api/experiences").param("status", "upcoming"))
+		mockMvc.perform(get("/api/experiences/upcoming"))
 			.andExpect(status().isForbidden());
 
-		mockMvc.perform(get("/api/experiences")
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
-				.param("status", "upcoming"))
+		mockMvc.perform(get("/api/experiences/upcoming")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.data.length()").value(1))
@@ -83,21 +82,11 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data[0].requiredItemsComplete").value(false))
 			.andExpect(jsonPath("$.data[0].platforms[0].platformId").value(10));
 
-		mockMvc.perform(get("/api/experiences")
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
-				.param("status", "completed"))
+		mockMvc.perform(get("/api/experiences/completed")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.length()").value(1))
 			.andExpect(jsonPath("$.data[0].id").value(completed.getId()))
 			.andExpect(jsonPath("$.data[0].reviewSubmitted").value(true));
-
-		mockMvc.perform(get("/api/experiences")
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
-			.andExpect(status().isBadRequest());
-
-		mockMvc.perform(get("/api/experiences")
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
-				.param("status", "all"))
-			.andExpect(status().isBadRequest());
 	}
 }

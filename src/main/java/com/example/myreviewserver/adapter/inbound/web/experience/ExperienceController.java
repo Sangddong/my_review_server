@@ -2,11 +2,9 @@ package com.example.myreviewserver.adapter.inbound.web.experience;
 
 import com.example.myreviewserver.adapter.inbound.security.CurrentUser;
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
-import com.example.myreviewserver.application.experience.ExperienceListStatus;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -37,16 +34,11 @@ public class ExperienceController {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 	}
 
-	/**
-	 * @RequestParam: 쿼리 문자열 ?status= 값을 메서드 인자로 받음.
-	 */
-	@GetMapping
+	@GetMapping("/upcoming")
 	@Operation(
-		summary = "체험 목록 조회",
+		summary = "다가오는 체험 목록",
 		description = """
-			로그인한 사용자 본인 체험만 반환합니다.
-			upcoming: 미제출(is_review_submitted가 null).
-			completed: 제출됨(is_review_submitted=1).
+			로그인한 사용자 본인의 미제출 체험만 반환합니다.
 			정렬은 reservationDate, reservationTime 오름차순(null은 뒤), id 오름차순입니다.
 			"""
 	)
@@ -56,19 +48,35 @@ public class ExperienceController {
 			description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = ExperienceListApiResponse.class))
 		),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "status 누락 또는 잘못된 값"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
 	})
-	public ApiResponse<List<ExperienceResponse>> list(
-		@Parameter(description = "upcoming | completed", example = "upcoming", required = true)
-		@RequestParam String status
-	) {
+	public ApiResponse<List<ExperienceResponse>> upcoming() {
 		Long userId = CurrentUser.requireUserId();
-		List<ExperienceResponse> experiences = listExperiencesUseCase
-			.execute(userId, ExperienceListStatus.from(status))
-			.stream()
+		return ApiResponse.ok(listExperiencesUseCase.upcoming(userId).stream()
 			.map(ExperienceResponse::from)
-			.toList();
-		return ApiResponse.ok(experiences);
+			.toList());
+	}
+
+	@GetMapping("/completed")
+	@Operation(
+		summary = "완료된 체험 목록",
+		description = """
+			로그인한 사용자 본인의 제출 완료 체험만 반환합니다.
+			정렬은 reservationDate, reservationTime 오름차순(null은 뒤), id 오름차순입니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = ExperienceListApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<List<ExperienceResponse>> completed() {
+		Long userId = CurrentUser.requireUserId();
+		return ApiResponse.ok(listExperiencesUseCase.completed(userId).stream()
+			.map(ExperienceResponse::from)
+			.toList());
 	}
 }
