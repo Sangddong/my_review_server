@@ -15,9 +15,9 @@ public interface ExperienceRepository {
 
 	Optional<Experience> findByIdAndUserId(Long id, Long userId);
 
-	List<Experience> findUpcomingByUserIdOrderByReviewDeadlineAscIdAsc(Long userId);
+	List<Experience> findUpcomingByUserIdOrderByReservationAscIdAsc(Long userId);
 
-	List<Experience> findCompletedByUserIdOrderByReviewDeadlineAscIdAsc(Long userId);
+	List<Experience> findCompletedByUserIdOrderByReservationAscIdAsc(Long userId);
 
 	boolean deleteByIdAndUserId(Long id, Long userId);
 }
