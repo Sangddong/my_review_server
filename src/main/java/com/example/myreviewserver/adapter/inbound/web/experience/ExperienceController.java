@@ -2,6 +2,7 @@ package com.example.myreviewserver.adapter.inbound.web.experience;
 
 import com.example.myreviewserver.adapter.inbound.security.CurrentUser;
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
+import com.example.myreviewserver.application.experience.CreateExperienceUseCase;
 import com.example.myreviewserver.application.experience.GetExperienceUseCase;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
@@ -12,9 +13,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -23,7 +28,10 @@ import org.springframework.web.bind.annotation.RestController;
  * @RestController / @RequestMapping / @Tag: HTTP JSON API + Swagger 그룹.
  * @SecurityRequirement: Swagger Authorize(JWT) 필요.
  * @GetMapping: HTTP GET만 받음.
+ * @PostMapping: HTTP POST만 받음.
  * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
+ * @RequestBody: JSON 본문을 요청 객체로 변환.
+ * @ResponseStatus: 성공 시 HTTP 상태 코드 지정.
  */
 @RestController
 @RequestMapping("/api/experiences")
@@ -33,13 +41,16 @@ public class ExperienceController {
 
 	private final ListExperiencesUseCase listExperiencesUseCase;
 	private final GetExperienceUseCase getExperienceUseCase;
+	private final CreateExperienceUseCase createExperienceUseCase;
 
 	public ExperienceController(
 		ListExperiencesUseCase listExperiencesUseCase,
-		GetExperienceUseCase getExperienceUseCase
+		GetExperienceUseCase getExperienceUseCase,
+		CreateExperienceUseCase createExperienceUseCase
 	) {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 		this.getExperienceUseCase = getExperienceUseCase;
+		this.createExperienceUseCase = createExperienceUseCase;
 	}
 
 	/** GET /api/experiences/upcoming */
@@ -112,5 +123,44 @@ public class ExperienceController {
 	public ApiResponse<ExperienceResponse> get(@PathVariable Long id) {
 		Long userId = CurrentUser.requireUserId();
 		return ApiResponse.ok(ExperienceResponse.from(getExperienceUseCase.get(userId, id)));
+	}
+
+	/** POST /api/experiences */
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	@Operation(
+		summary = "체험 생성",
+		description = """
+			로그인한 사용자 본인 체험을 생성하고 플랫폼을 연결합니다.
+			reviewDeadline과 platforms는 필수이며, 필수(isRequired=true) 플랫폼이 1개 이상이어야 합니다.
+			연결할 platformId는 본인 활성 플랫폼이어야 합니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "201",
+			description = "생성 성공",
+			content = @Content(schema = @Schema(implementation = ExperienceApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "검증 실패"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<ExperienceResponse> create(@RequestBody CreateExperienceRequest request) {
+		Long userId = CurrentUser.requireUserId();
+		List<CreateExperienceUseCase.PlatformLink> platforms = request.platforms() == null
+			? null
+			: request.platforms().stream()
+				.map(p -> new CreateExperienceUseCase.PlatformLink(p.platformId(), p.isRequired()))
+				.toList();
+		return ApiResponse.ok(ExperienceResponse.from(createExperienceUseCase.create(
+			userId,
+			request.name(),
+			request.experienceType(),
+			request.reservationDate(),
+			request.reservationTime(),
+			request.reviewDeadline(),
+			request.detailLink(),
+			platforms
+		)));
 	}
 }

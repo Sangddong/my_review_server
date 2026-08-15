@@ -278,6 +278,7 @@ public class Experience {
 		}
 		Set<Long> seen = new HashSet<>();
 		List<ExperiencePlatform> copy = new ArrayList<>();
+		boolean hasRequired = false;
 		for (ExperiencePlatform platform : platforms) {
 			if (platform == null) {
 				throw new DomainException("platform link is required");
@@ -285,7 +286,13 @@ public class Experience {
 			if (!seen.add(platform.getPlatformId())) {
 				throw new DomainException("duplicate platformId");
 			}
+			if (platform.isRequired()) {
+				hasRequired = true;
+			}
 			copy.add(platform);
+		}
+		if (!hasRequired) {
+			throw new DomainException("at least one required platform is required");
 		}
 		return copy;
 	}
