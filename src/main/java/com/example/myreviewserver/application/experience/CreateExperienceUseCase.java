@@ -51,6 +51,7 @@ public class CreateExperienceUseCase {
 			throw new DomainException("at least one platform is required");
 		}
 
+		List<Long> platformIdList = new ArrayList<>();
 		List<ExperiencePlatform> links = new ArrayList<>();
 		for (PlatformLink platform : platformList) {
 			if (platform == null) {
@@ -62,13 +63,11 @@ public class CreateExperienceUseCase {
 			if (platform.isRequired() == null) {
 				throw new DomainException("isRequired is required");
 			}
-			if (platformRepository.findActiveByIdAndUserId(platform.platformId(), userId).isEmpty()) {
-				throw new DomainException("Platform not found");
-			}
+			platformIdList.add(platform.platformId());
 			links.add(ExperiencePlatform.of(platform.platformId(), platform.isRequired()));
 		}
 
-		return experienceRepository.save(Experience.create(
+		Experience experience = Experience.create(
 			userId,
 			name,
 			experienceType,
@@ -77,7 +76,14 @@ public class CreateExperienceUseCase {
 			reviewDeadline,
 			detailLink,
 			links
-		));
+		);
+
+		long foundCount = platformRepository.countActiveByUserIdAndIdIn(userId, platformIdList);
+		if (foundCount != platformIdList.size()) {
+			throw new DomainException("Platform not found");
+		}
+
+		return experienceRepository.save(experience);
 	}
 
 	public record PlatformLink(Long platformId, Boolean isRequired) {

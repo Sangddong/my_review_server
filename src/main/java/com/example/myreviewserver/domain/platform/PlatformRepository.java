@@ -19,6 +19,11 @@ public interface PlatformRepository {
 
 	List<Platform> findActiveByUserIdOrderBySortOrderAscIdAsc(Long userId);
 
+	/**
+	 * Counts active platforms owned by the user whose ids are in the given list.
+	 */
+	long countActiveByUserIdAndIdIn(Long userId, List<Long> platformIdList);
+
 	boolean existsActiveByUserIdAndNameExcludingId(Long userId, String name, Long excludeId);
 
 	/**

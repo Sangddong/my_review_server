@@ -22,6 +22,8 @@ public interface SpringDataPlatformRepository extends JpaRepository<PlatformJpaE
 
 	List<PlatformJpaEntity> findByUserIdAndIsDeletedIsNullOrderBySortOrderAscIdAsc(Long userId);
 
+	long countByUserIdAndIdInAndIsDeletedIsNull(Long userId, List<Long> ids);
+
 	boolean existsByUserIdAndNameAndIsDeletedIsNullAndIdNot(Long userId, String name, Long id);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
