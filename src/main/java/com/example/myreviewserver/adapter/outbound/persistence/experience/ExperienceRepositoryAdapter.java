@@ -71,9 +71,9 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Experience> findUpcomingByUserIdOrderByReviewDeadlineAscIdAsc(Long userId) {
+	public List<Experience> findUpcomingByUserIdOrderByReservationAscIdAsc(Long userId) {
 		return experienceRepository
-			.findByUserIdAndIsReviewSubmittedIsNullOrderByReviewDeadlineAscIdAsc(userId)
+			.findUpcomingByUserIdOrderByReservationAscIdAsc(userId)
 			.stream()
 			.map(this::toDomain)
 			.toList();
@@ -81,9 +81,9 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Experience> findCompletedByUserIdOrderByReviewDeadlineAscIdAsc(Long userId) {
+	public List<Experience> findCompletedByUserIdOrderByReservationAscIdAsc(Long userId) {
 		return experienceRepository
-			.findByUserIdAndIsReviewSubmittedOrderByReviewDeadlineAscIdAsc(userId, 1)
+			.findCompletedByUserIdOrderByReservationAscIdAsc(userId)
 			.stream()
 			.map(this::toDomain)
 			.toList();

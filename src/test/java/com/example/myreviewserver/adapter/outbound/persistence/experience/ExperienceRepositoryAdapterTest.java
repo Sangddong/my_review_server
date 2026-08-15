@@ -52,8 +52,8 @@ class ExperienceRepositoryAdapterTest {
 		assertThat(created.getId()).isNotNull();
 		assertThat(created.getPlatforms()).hasSize(2);
 		assertThat(created.isRequiredItemsComplete()).isFalse();
-		assertThat(experienceRepository.findUpcomingByUserIdOrderByReviewDeadlineAscIdAsc(1L)).hasSize(1);
-		assertThat(experienceRepository.findCompletedByUserIdOrderByReviewDeadlineAscIdAsc(1L)).isEmpty();
+		assertThat(experienceRepository.findUpcomingByUserIdOrderByReservationAscIdAsc(1L)).hasSize(1);
+		assertThat(experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(1L)).isEmpty();
 
 		created.setPlatformRegistered(10L, true);
 		created.submitReview();
@@ -65,8 +65,8 @@ class ExperienceRepositoryAdapterTest {
 			.filteredOn(ExperiencePlatform::isRegistered)
 			.extracting(ExperiencePlatform::getPlatformId)
 			.containsExactly(10L);
-		assertThat(experienceRepository.findUpcomingByUserIdOrderByReviewDeadlineAscIdAsc(1L)).isEmpty();
-		assertThat(experienceRepository.findCompletedByUserIdOrderByReviewDeadlineAscIdAsc(1L)).hasSize(1);
+		assertThat(experienceRepository.findUpcomingByUserIdOrderByReservationAscIdAsc(1L)).isEmpty();
+		assertThat(experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(1L)).hasSize(1);
 
 		Experience later = experienceRepository.save(Experience.create(
 			1L,
@@ -78,13 +78,13 @@ class ExperienceRepositoryAdapterTest {
 			null,
 			List.of(ExperiencePlatform.of(30L, true))
 		));
-		assertThat(experienceRepository.findUpcomingByUserIdOrderByReviewDeadlineAscIdAsc(1L))
+		assertThat(experienceRepository.findUpcomingByUserIdOrderByReservationAscIdAsc(1L))
 			.extracting(Experience::getId)
 			.containsExactly(later.getId());
 
 		assertThat(experienceRepository.deleteByIdAndUserId(updated.getId(), 1L)).isTrue();
 		assertThat(experienceRepository.findByIdAndUserId(updated.getId(), 1L)).isEmpty();
-		assertThat(experienceRepository.findCompletedByUserIdOrderByReviewDeadlineAscIdAsc(1L)).isEmpty();
+		assertThat(experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(1L)).isEmpty();
 		assertThat(experienceRepository.deleteByIdAndUserId(updated.getId(), 1L)).isFalse();
 	}
 }
