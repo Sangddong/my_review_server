@@ -32,6 +32,8 @@ public class GoogleAuthController {
 	}
 
 	/**
+	 * POST /api/auth/google
+	 *
 	 * @PostMapping: HTTP POST만 받음.
 	 * @RequestBody: JSON 본문을 GoogleLoginRequest로 변환.
 	 * @Operation: Swagger에 표시되는 API 요약/설명.

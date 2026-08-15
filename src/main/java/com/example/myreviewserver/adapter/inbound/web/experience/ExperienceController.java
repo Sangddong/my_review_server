@@ -34,6 +34,7 @@ public class ExperienceController {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 	}
 
+	/** GET /api/experiences/upcoming */
 	@GetMapping("/upcoming")
 	@Operation(
 		summary = "다가오는 체험 목록",
@@ -57,6 +58,7 @@ public class ExperienceController {
 			.toList());
 	}
 
+	/** GET /api/experiences/completed */
 	@GetMapping("/completed")
 	@Operation(
 		summary = "완료된 체험 목록",

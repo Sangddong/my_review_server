@@ -43,6 +43,7 @@ public class DeviceTokenController {
 		this.deleteDeviceTokenUseCase = deleteDeviceTokenUseCase;
 	}
 
+	/** PUT /api/me/device-tokens */
 	@PutMapping
 	@Operation(summary = "디바이스 토큰 등록/갱신", description = "동일 token이 있으면 현재 사용자·platform으로 갱신합니다.")
 	@ApiResponses({
@@ -60,6 +61,7 @@ public class DeviceTokenController {
 		return ApiResponse.ok(DeviceTokenResponse.from(saved));
 	}
 
+	/** DELETE /api/me/device-tokens */
 	@DeleteMapping
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "디바이스 토큰 삭제", description = "본인 소유의 token만 삭제됩니다.")

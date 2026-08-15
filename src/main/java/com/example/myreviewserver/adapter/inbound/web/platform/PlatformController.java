@@ -60,6 +60,7 @@ public class PlatformController {
 		this.reorderPlatformsUseCase = reorderPlatformsUseCase;
 	}
 
+	/** GET /api/platforms */
 	@GetMapping
 	@Operation(
 		summary = "플랫폼 목록 조회",
@@ -82,6 +83,8 @@ public class PlatformController {
 	}
 
 	/**
+	 * POST /api/platforms
+	 *
 	 * @PostMapping: HTTP POST만 받음.
 	 * @RequestBody: JSON 본문을 CreatePlatformRequest로 변환.
 	 * @ResponseStatus: 성공 시 HTTP 201.
@@ -113,6 +116,8 @@ public class PlatformController {
 	}
 
 	/**
+	 * PATCH /api/platforms/{id}
+	 *
 	 * @PatchMapping: HTTP PATCH만 받음.
 	 * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
 	 * @RequestBody: JSON 본문을 UpdatePlatformRequest로 변환.
@@ -150,6 +155,8 @@ public class PlatformController {
 	}
 
 	/**
+	 * DELETE /api/platforms/{id}
+	 *
 	 * @DeleteMapping: HTTP DELETE만 받음.
 	 * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
 	 * @ResponseStatus: 성공 시 HTTP 204.
@@ -178,6 +185,8 @@ public class PlatformController {
 	}
 
 	/**
+	 * PUT /api/platforms/reorder
+	 *
 	 * @PutMapping: HTTP PUT만 받음.
 	 * @RequestBody: JSON 본문을 ReorderPlatformsRequest로 변환.
 	 */
