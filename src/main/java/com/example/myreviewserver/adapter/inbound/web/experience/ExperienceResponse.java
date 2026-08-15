@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-@Schema(description = "체험 목록 항목")
+@Schema(description = "체험")
 public record ExperienceResponse(
 	@Schema(description = "체험 ID", example = "1")
 	Long id,
