@@ -9,7 +9,9 @@ import com.example.myreviewserver.domain.shared.DomainException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +53,7 @@ public class CreateExperienceUseCase {
 			throw new DomainException("at least one platform is required");
 		}
 
-		List<Long> platformIdList = new ArrayList<>();
+		Set<Long> platformIdList = new LinkedHashSet<>();
 		List<ExperiencePlatform> links = new ArrayList<>();
 		for (PlatformLink platform : platformList) {
 			if (platform == null) {
@@ -67,7 +69,12 @@ public class CreateExperienceUseCase {
 			links.add(ExperiencePlatform.of(platform.platformId(), platform.isRequired()));
 		}
 
-		Experience experience = Experience.create(
+		long foundCount = platformRepository.countActiveByUserIdAndIdIn(userId, List.copyOf(platformIdList));
+		if (foundCount != platformIdList.size()) {
+			throw new DomainException("Platform not found");
+		}
+
+		return experienceRepository.save(Experience.create(
 			userId,
 			name,
 			experienceType,
@@ -76,14 +83,7 @@ public class CreateExperienceUseCase {
 			reviewDeadline,
 			detailLink,
 			links
-		);
-
-		long foundCount = platformRepository.countActiveByUserIdAndIdIn(userId, platformIdList);
-		if (foundCount != platformIdList.size()) {
-			throw new DomainException("Platform not found");
-		}
-
-		return experienceRepository.save(experience);
+		));
 	}
 
 	public record PlatformLink(Long platformId, Boolean isRequired) {
