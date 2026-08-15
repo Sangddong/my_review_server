@@ -26,7 +26,7 @@ public record CreateExperienceRequest(
 	@Schema(description = "상세 링크", example = "https://example.com", nullable = true)
 	String detailLink,
 
-	@Schema(description = "연결 플랫폼 (필수 플랫폼 1개 이상)")
-	List<CreateExperiencePlatformRequest> platforms
+	@Schema(description = "연결 플랫폼 목록 (필수 플랫폼 1개 이상)")
+	List<CreateExperiencePlatformRequest> platformList
 ) {
 }

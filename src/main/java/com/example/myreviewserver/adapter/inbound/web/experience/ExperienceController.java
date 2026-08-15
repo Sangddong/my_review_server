@@ -132,7 +132,7 @@ public class ExperienceController {
 		summary = "체험 생성",
 		description = """
 			로그인한 사용자 본인 체험을 생성하고 플랫폼을 연결합니다.
-			reviewDeadline과 platforms는 필수이며, 필수(isRequired=true) 플랫폼이 1개 이상이어야 합니다.
+			reviewDeadline과 platformList는 필수이며, 필수(isRequired=true) 플랫폼이 1개 이상이어야 합니다.
 			연결할 platformId는 본인 활성 플랫폼이어야 합니다.
 			"""
 	)
@@ -147,9 +147,9 @@ public class ExperienceController {
 	})
 	public ApiResponse<ExperienceResponse> create(@RequestBody CreateExperienceRequest request) {
 		Long userId = CurrentUser.requireUserId();
-		List<CreateExperienceUseCase.PlatformLink> platforms = request.platforms() == null
+		List<CreateExperienceUseCase.PlatformLink> platformList = request.platformList() == null
 			? null
-			: request.platforms().stream()
+			: request.platformList().stream()
 				.map(p -> new CreateExperienceUseCase.PlatformLink(p.platformId(), p.isRequired()))
 				.toList();
 		return ApiResponse.ok(ExperienceResponse.from(createExperienceUseCase.create(
@@ -160,7 +160,7 @@ public class ExperienceController {
 			request.reservationTime(),
 			request.reviewDeadline(),
 			request.detailLink(),
-			platforms
+			platformList
 		)));
 	}
 }

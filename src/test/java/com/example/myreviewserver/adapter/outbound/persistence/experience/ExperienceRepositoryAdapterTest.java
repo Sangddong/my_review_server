@@ -50,7 +50,7 @@ class ExperienceRepositoryAdapterTest {
 		));
 
 		assertThat(created.getId()).isNotNull();
-		assertThat(created.getPlatforms()).hasSize(2);
+		assertThat(created.getPlatformList()).hasSize(2);
 		assertThat(created.isRequiredItemsComplete()).isFalse();
 		assertThat(experienceRepository.findUpcomingByUserIdOrderByReservationAscIdAsc(1L)).hasSize(1);
 		assertThat(experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(1L)).isEmpty();
@@ -61,7 +61,7 @@ class ExperienceRepositoryAdapterTest {
 
 		assertThat(updated.isRequiredItemsComplete()).isTrue();
 		assertThat(updated.isReviewSubmitted()).isTrue();
-		assertThat(updated.getPlatforms())
+		assertThat(updated.getPlatformList())
 			.filteredOn(ExperiencePlatform::isRegistered)
 			.extracting(ExperiencePlatform::getPlatformId)
 			.containsExactly(10L);

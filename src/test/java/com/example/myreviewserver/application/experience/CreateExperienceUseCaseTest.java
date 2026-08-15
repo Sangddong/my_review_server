@@ -55,11 +55,11 @@ class CreateExperienceUseCaseTest {
 		assertThat(created.getId()).isNotNull();
 		assertThat(created.getName()).isEqualTo("성수 카페");
 		assertThat(created.isReviewSubmitted()).isFalse();
-		assertThat(created.getPlatforms()).extracting(ExperiencePlatform::getPlatformId)
+		assertThat(created.getPlatformList()).extracting(ExperiencePlatform::getPlatformId)
 			.containsExactly(required.getId(), optional.getId());
-		assertThat(created.getPlatforms()).extracting(ExperiencePlatform::isRequired)
+		assertThat(created.getPlatformList()).extracting(ExperiencePlatform::isRequired)
 			.containsExactly(true, false);
-		assertThat(created.getPlatforms()).extracting(ExperiencePlatform::isRegistered)
+		assertThat(created.getPlatformList()).extracting(ExperiencePlatform::isRegistered)
 			.containsExactly(false, false);
 	}
 

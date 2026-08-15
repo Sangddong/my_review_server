@@ -87,7 +87,7 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data[0].experienceType").value("VISIT"))
 			.andExpect(jsonPath("$.data[0].reviewSubmitted").value(false))
 			.andExpect(jsonPath("$.data[0].requiredItemsComplete").value(false))
-			.andExpect(jsonPath("$.data[0].platforms[0].platformId").value(10));
+			.andExpect(jsonPath("$.data[0].platformList[0].platformId").value(10));
 
 		mockMvc.perform(get("/api/experiences/completed")
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
@@ -129,12 +129,12 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data.experienceType").value("VISIT"))
 			.andExpect(jsonPath("$.data.reviewSubmitted").value(false))
 			.andExpect(jsonPath("$.data.requiredItemsComplete").value(true))
-			.andExpect(jsonPath("$.data.platforms[0].platformId").value(10))
-			.andExpect(jsonPath("$.data.platforms[0].required").value(true))
-			.andExpect(jsonPath("$.data.platforms[0].registered").value(true))
-			.andExpect(jsonPath("$.data.platforms[1].platformId").value(20))
-			.andExpect(jsonPath("$.data.platforms[1].required").value(false))
-			.andExpect(jsonPath("$.data.platforms[1].registered").value(false));
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(10))
+			.andExpect(jsonPath("$.data.platformList[0].required").value(true))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(true))
+			.andExpect(jsonPath("$.data.platformList[1].platformId").value(20))
+			.andExpect(jsonPath("$.data.platformList[1].required").value(false))
+			.andExpect(jsonPath("$.data.platformList[1].registered").value(false));
 
 		mockMvc.perform(get("/api/experiences/" + experience.getId())
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt))
@@ -163,7 +163,7 @@ class ExperienceControllerTest {
 			  "reservationTime":"14:00:00",
 			  "reviewDeadline":"2026-08-25",
 			  "detailLink":"https://example.com",
-			  "platforms":[
+			  "platformList":[
 			    {"platformId":%d,"isRequired":true},
 			    {"platformId":%d,"isRequired":false}
 			  ]
@@ -187,11 +187,11 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data.reviewDeadline").value("2026-08-25"))
 			.andExpect(jsonPath("$.data.reviewSubmitted").value(false))
 			.andExpect(jsonPath("$.data.requiredItemsComplete").value(false))
-			.andExpect(jsonPath("$.data.platforms[0].platformId").value(required.getId().intValue()))
-			.andExpect(jsonPath("$.data.platforms[0].required").value(true))
-			.andExpect(jsonPath("$.data.platforms[0].registered").value(false))
-			.andExpect(jsonPath("$.data.platforms[1].platformId").value(optional.getId().intValue()))
-			.andExpect(jsonPath("$.data.platforms[1].required").value(false));
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(required.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[0].required").value(true))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(false))
+			.andExpect(jsonPath("$.data.platformList[1].platformId").value(optional.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[1].required").value(false));
 
 		mockMvc.perform(post("/api/experiences")
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
@@ -200,7 +200,7 @@ class ExperienceControllerTest {
 					{
 					  "name":"마감없음",
 					  "experienceType":"VISIT",
-					  "platforms":[{"platformId":%d,"isRequired":true}]
+					  "platformList":[{"platformId":%d,"isRequired":true}]
 					}
 					""".formatted(required.getId())))
 			.andExpect(status().isBadRequest())

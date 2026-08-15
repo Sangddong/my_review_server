@@ -42,17 +42,17 @@ public class CreateExperienceUseCase {
 		LocalTime reservationTime,
 		LocalDate reviewDeadline,
 		String detailLink,
-		List<PlatformLink> platforms
+		List<PlatformLink> platformList
 	) {
 		if (userId == null) {
 			throw new DomainException("userId is required");
 		}
-		if (platforms == null || platforms.isEmpty()) {
+		if (platformList == null || platformList.isEmpty()) {
 			throw new DomainException("at least one platform is required");
 		}
 
 		List<ExperiencePlatform> links = new ArrayList<>();
-		for (PlatformLink platform : platforms) {
+		for (PlatformLink platform : platformList) {
 			if (platform == null) {
 				throw new DomainException("platform link is required");
 			}
