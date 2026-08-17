@@ -8,6 +8,7 @@ import com.example.myreviewserver.application.experience.GetExperienceUseCase;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
 import com.example.myreviewserver.application.experience.UpdateExperienceUseCase;
 import com.example.myreviewserver.application.experience.UpdateExperiencePlatformRegistrationUseCase;
+import com.example.myreviewserver.application.experience.UpdateExperienceSubmissionUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -54,6 +55,7 @@ public class ExperienceController {
 	private final UpdateExperienceUseCase updateExperienceUseCase;
 	private final DeleteExperienceUseCase deleteExperienceUseCase;
 	private final UpdateExperiencePlatformRegistrationUseCase updateExperiencePlatformRegistrationUseCase;
+	private final UpdateExperienceSubmissionUseCase updateExperienceSubmissionUseCase;
 
 	public ExperienceController(
 		ListExperiencesUseCase listExperiencesUseCase,
@@ -61,7 +63,8 @@ public class ExperienceController {
 		CreateExperienceUseCase createExperienceUseCase,
 		UpdateExperienceUseCase updateExperienceUseCase,
 		DeleteExperienceUseCase deleteExperienceUseCase,
-		UpdateExperiencePlatformRegistrationUseCase updateExperiencePlatformRegistrationUseCase
+		UpdateExperiencePlatformRegistrationUseCase updateExperiencePlatformRegistrationUseCase,
+		UpdateExperienceSubmissionUseCase updateExperienceSubmissionUseCase
 	) {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 		this.getExperienceUseCase = getExperienceUseCase;
@@ -69,6 +72,7 @@ public class ExperienceController {
 		this.updateExperienceUseCase = updateExperienceUseCase;
 		this.deleteExperienceUseCase = deleteExperienceUseCase;
 		this.updateExperiencePlatformRegistrationUseCase = updateExperiencePlatformRegistrationUseCase;
+		this.updateExperienceSubmissionUseCase = updateExperienceSubmissionUseCase;
 	}
 
 	/** GET /api/experiences/upcoming */
@@ -272,6 +276,34 @@ public class ExperienceController {
 		Long userId = CurrentUser.requireUserId();
 		return ApiResponse.ok(ExperienceResponse.from(
 			updateExperiencePlatformRegistrationUseCase.update(userId, id, platformId, request.registered())
+		));
+	}
+
+	/** PATCH /api/experiences/{id}/submission */
+	@PatchMapping("/{id}/submission")
+	@Operation(
+		summary = "체험 제출 상태 변경",
+		description = """
+			로그인한 사용자 본인 소유의 체험 리뷰 제출 여부를 바꿉니다.
+			submitted=true이면 완료된 목록에, false이면 다가오는 목록에 나타납니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "변경 성공",
+			content = @Content(schema = @Schema(implementation = ExperienceApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "검증 실패 또는 없거나 권한 없음"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<ExperienceResponse> updateSubmission(
+		@PathVariable Long id,
+		@RequestBody UpdateExperienceSubmissionRequest request
+	) {
+		Long userId = CurrentUser.requireUserId();
+		return ApiResponse.ok(ExperienceResponse.from(
+			updateExperienceSubmissionUseCase.update(userId, id, request.submitted())
 		));
 	}
 }

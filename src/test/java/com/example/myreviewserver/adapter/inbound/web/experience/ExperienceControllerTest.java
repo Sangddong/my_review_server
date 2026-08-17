@@ -371,4 +371,74 @@ class ExperienceControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
 	}
+
+	@Test
+	void updatesSubmissionForAuthenticatedOwner() throws Exception {
+		User owner = userRepository.save(User.create("exp-submit-api@test.com", "owner"));
+		User other = userRepository.save(User.create("exp-submit-api-other@test.com", "other"));
+		String ownerJwt = jwtTokenProvider.createAccessToken(owner.getId(), owner.getNickname());
+		String otherJwt = jwtTokenProvider.createAccessToken(other.getId(), other.getNickname());
+
+		Experience experience = experienceRepository.save(Experience.create(
+			owner.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(10L, true))
+		));
+		String path = "/api/experiences/" + experience.getId() + "/submission";
+
+		mockMvc.perform(patch(path)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"submitted":true}
+					"""))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(patch(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"submitted":true}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.reviewSubmitted").value(true));
+
+		mockMvc.perform(get("/api/experiences/completed")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.length()").value(1))
+			.andExpect(jsonPath("$.data[0].id").value(experience.getId()));
+		mockMvc.perform(get("/api/experiences/upcoming")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.length()").value(0));
+
+		mockMvc.perform(patch(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"submitted":false}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.reviewSubmitted").value(false));
+
+		mockMvc.perform(get("/api/experiences/upcoming")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.length()").value(1));
+
+		mockMvc.perform(patch(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"submitted":true}
+					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Experience not found"));
+	}
 }
