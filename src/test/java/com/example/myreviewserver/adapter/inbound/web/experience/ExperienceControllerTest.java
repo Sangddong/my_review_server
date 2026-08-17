@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.experience;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -9,6 +10,8 @@ import com.example.myreviewserver.domain.experience.Experience;
 import com.example.myreviewserver.domain.experience.ExperiencePlatform;
 import com.example.myreviewserver.domain.experience.ExperienceRepository;
 import com.example.myreviewserver.domain.experience.ExperienceType;
+import com.example.myreviewserver.domain.platform.Platform;
+import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.LocalDate;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,6 +42,9 @@ class ExperienceControllerTest {
 
 	@Autowired
 	ExperienceRepository experienceRepository;
+
+	@Autowired
+	PlatformRepository platformRepository;
 
 	@Test
 	void listsUpcomingAndCompletedForAuthenticatedUser() throws Exception {
@@ -62,7 +69,7 @@ class ExperienceControllerTest {
 			null,
 			LocalDate.of(2026, 8, 5),
 			null,
-			List.of(ExperiencePlatform.of(20L, false))
+			List.of(ExperiencePlatform.of(20L, true))
 		));
 		completed.submitReview();
 		experienceRepository.save(completed);
@@ -80,7 +87,7 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data[0].experienceType").value("VISIT"))
 			.andExpect(jsonPath("$.data[0].reviewSubmitted").value(false))
 			.andExpect(jsonPath("$.data[0].requiredItemsComplete").value(false))
-			.andExpect(jsonPath("$.data[0].platforms[0].platformId").value(10));
+			.andExpect(jsonPath("$.data[0].platformList[0].platformId").value(10));
 
 		mockMvc.perform(get("/api/experiences/completed")
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt))
@@ -122,12 +129,12 @@ class ExperienceControllerTest {
 			.andExpect(jsonPath("$.data.experienceType").value("VISIT"))
 			.andExpect(jsonPath("$.data.reviewSubmitted").value(false))
 			.andExpect(jsonPath("$.data.requiredItemsComplete").value(true))
-			.andExpect(jsonPath("$.data.platforms[0].platformId").value(10))
-			.andExpect(jsonPath("$.data.platforms[0].required").value(true))
-			.andExpect(jsonPath("$.data.platforms[0].registered").value(true))
-			.andExpect(jsonPath("$.data.platforms[1].platformId").value(20))
-			.andExpect(jsonPath("$.data.platforms[1].required").value(false))
-			.andExpect(jsonPath("$.data.platforms[1].registered").value(false));
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(10))
+			.andExpect(jsonPath("$.data.platformList[0].required").value(true))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(true))
+			.andExpect(jsonPath("$.data.platformList[1].platformId").value(20))
+			.andExpect(jsonPath("$.data.platformList[1].required").value(false))
+			.andExpect(jsonPath("$.data.platformList[1].registered").value(false));
 
 		mockMvc.perform(get("/api/experiences/" + experience.getId())
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt))
@@ -139,5 +146,64 @@ class ExperienceControllerTest {
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
+	}
+
+	@Test
+	void createsExperienceForAuthenticatedUser() throws Exception {
+		User user = userRepository.save(User.create("exp-create-api@test.com", "creator"));
+		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+		Platform required = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
+		Platform optional = platformRepository.save(Platform.create(user.getId(), "인스타", "#222222", 1));
+
+		String body = """
+			{
+			  "name":"성수 카페",
+			  "experienceType":"VISIT",
+			  "reservationDate":"2026-08-20",
+			  "reservationTime":"14:00:00",
+			  "reviewDeadline":"2026-08-25",
+			  "detailLink":"https://example.com",
+			  "platformList":[
+			    {"platformId":%d,"isRequired":true},
+			    {"platformId":%d,"isRequired":false}
+			  ]
+			}
+			""".formatted(required.getId(), optional.getId());
+
+		mockMvc.perform(post("/api/experiences")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(post("/api/experiences")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.id").isNumber())
+			.andExpect(jsonPath("$.data.name").value("성수 카페"))
+			.andExpect(jsonPath("$.data.experienceType").value("VISIT"))
+			.andExpect(jsonPath("$.data.reviewDeadline").value("2026-08-25"))
+			.andExpect(jsonPath("$.data.reviewSubmitted").value(false))
+			.andExpect(jsonPath("$.data.requiredItemsComplete").value(false))
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(required.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[0].required").value(true))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(false))
+			.andExpect(jsonPath("$.data.platformList[1].platformId").value(optional.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[1].required").value(false));
+
+		mockMvc.perform(post("/api/experiences")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{
+					  "name":"마감없음",
+					  "experienceType":"VISIT",
+					  "platformList":[{"platformId":%d,"isRequired":true}]
+					}
+					""".formatted(required.getId())))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("reviewDeadline is required"));
 	}
 }

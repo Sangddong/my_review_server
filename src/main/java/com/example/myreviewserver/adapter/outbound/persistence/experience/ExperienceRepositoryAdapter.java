@@ -53,7 +53,7 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 		ExperienceJpaEntity saved = experienceRepository.saveAndFlush(entity);
 		entityManager.refresh(saved);
 
-		replaceLinks(saved.getId(), experience.getPlatforms());
+		replaceLinks(saved.getId(), experience.getPlatformList());
 		return toDomain(saved);
 	}
 
@@ -101,18 +101,18 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 		return true;
 	}
 
-	private void replaceLinks(Long experienceId, List<ExperiencePlatform> platforms) {
+	private void replaceLinks(Long experienceId, List<ExperiencePlatform> platformList) {
 		registeredPlatformRepository.deleteByIdExperienceId(experienceId);
 		entityManager.flush();
 		platformLinkRepository.deleteByIdExperienceId(experienceId);
 		entityManager.flush();
 
-		for (ExperiencePlatform platform : platforms) {
+		for (ExperiencePlatform platform : platformList) {
 			platformLinkRepository.save(ExperiencePersistenceMapper.toPlatformEntity(experienceId, platform));
 		}
 		entityManager.flush();
 
-		for (ExperiencePlatform platform : platforms) {
+		for (ExperiencePlatform platform : platformList) {
 			if (platform.isRegistered()) {
 				registeredPlatformRepository.save(
 					ExperiencePersistenceMapper.toRegisteredEntity(experienceId, platform.getPlatformId())

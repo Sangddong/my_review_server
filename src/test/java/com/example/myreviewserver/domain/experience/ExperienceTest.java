@@ -73,6 +73,17 @@ class ExperienceTest {
 			null,
 			LocalDate.of(2026, 9, 1),
 			null,
+			List.of(ExperiencePlatform.of(10L, false))
+		)).isInstanceOf(DomainException.class).hasMessageContaining("at least one required platform");
+
+		assertThatThrownBy(() -> Experience.create(
+			1L,
+			"체험",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 9, 1),
+			null,
 			List.of(ExperiencePlatform.of(10L, true), ExperiencePlatform.of(10L, false))
 		)).isInstanceOf(DomainException.class).hasMessageContaining("duplicate");
 

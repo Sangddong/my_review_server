@@ -76,10 +76,10 @@ public class PlatformController {
 	})
 	public ApiResponse<List<PlatformResponse>> list() {
 		Long userId = CurrentUser.requireUserId();
-		List<PlatformResponse> platforms = listPlatformsUseCase.execute(userId).stream()
+		List<PlatformResponse> platformList = listPlatformsUseCase.execute(userId).stream()
 			.map(PlatformResponse::from)
 			.toList();
-		return ApiResponse.ok(platforms);
+		return ApiResponse.ok(platformList);
 	}
 
 	/**
@@ -213,9 +213,9 @@ public class PlatformController {
 	})
 	public ApiResponse<List<PlatformResponse>> reorder(@RequestBody ReorderPlatformsRequest request) {
 		Long userId = CurrentUser.requireUserId();
-		List<PlatformResponse> platforms = reorderPlatformsUseCase.execute(userId, request.orderedIds()).stream()
+		List<PlatformResponse> platformList = reorderPlatformsUseCase.execute(userId, request.orderedIds()).stream()
 			.map(PlatformResponse::from)
 			.toList();
-		return ApiResponse.ok(platforms);
+		return ApiResponse.ok(platformList);
 	}
 }

@@ -36,8 +36,8 @@ public record ExperienceResponse(
 	@Schema(description = "필수 플랫폼 등록이 모두 끝났는지 (저장값 아님)", example = "false")
 	boolean requiredItemsComplete,
 
-	@Schema(description = "연결된 플랫폼")
-	List<ExperiencePlatformResponse> platforms
+	@Schema(description = "연결된 플랫폼 목록")
+	List<ExperiencePlatformResponse> platformList
 ) {
 
 	public static ExperienceResponse from(Experience experience) {
@@ -51,7 +51,7 @@ public record ExperienceResponse(
 			experience.isReviewSubmitted(),
 			experience.getDetailLink(),
 			experience.isRequiredItemsComplete(),
-			experience.getPlatforms().stream().map(ExperiencePlatformResponse::from).toList()
+			experience.getPlatformList().stream().map(ExperiencePlatformResponse::from).toList()
 		);
 	}
 }

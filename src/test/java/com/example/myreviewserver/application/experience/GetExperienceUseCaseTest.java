@@ -53,11 +53,11 @@ class GetExperienceUseCaseTest {
 		assertThat(found.getName()).isEqualTo("성수 카페");
 		assertThat(found.isReviewSubmitted()).isFalse();
 		assertThat(found.isRequiredItemsComplete()).isTrue();
-		assertThat(found.getPlatforms()).extracting(ExperiencePlatform::getPlatformId)
+		assertThat(found.getPlatformList()).extracting(ExperiencePlatform::getPlatformId)
 			.containsExactly(10L, 20L);
-		assertThat(found.getPlatforms()).extracting(ExperiencePlatform::isRequired)
+		assertThat(found.getPlatformList()).extracting(ExperiencePlatform::isRequired)
 			.containsExactly(true, false);
-		assertThat(found.getPlatforms()).extracting(ExperiencePlatform::isRegistered)
+		assertThat(found.getPlatformList()).extracting(ExperiencePlatform::isRegistered)
 			.containsExactly(true, false);
 	}
 

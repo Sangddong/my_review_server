@@ -80,6 +80,15 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 
 	@Override
 	@Transactional(readOnly = true)
+	public long countActiveByUserIdAndIdIn(Long userId, List<Long> platformIdList) {
+		if (platformIdList == null || platformIdList.isEmpty()) {
+			return 0L;
+		}
+		return springDataPlatformRepository.countByUserIdAndIdInAndIsDeletedIsNull(userId, platformIdList);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public boolean existsActiveByUserIdAndNameExcludingId(Long userId, String name, Long excludeId) {
 		return springDataPlatformRepository
 			.existsByUserIdAndNameAndIsDeletedIsNullAndIdNot(userId, name, excludeId);

@@ -29,7 +29,7 @@ public class Experience {
 	private LocalDate reviewDeadline;
 	private Integer isReviewSubmitted;
 	private String detailLink;
-	private List<ExperiencePlatform> platforms;
+	private List<ExperiencePlatform> platformList;
 	private final Instant createdAt;
 	private final Instant updatedAt;
 
@@ -43,7 +43,7 @@ public class Experience {
 		LocalDate reviewDeadline,
 		Integer isReviewSubmitted,
 		String detailLink,
-		List<ExperiencePlatform> platforms,
+		List<ExperiencePlatform> platformList,
 		Instant createdAt,
 		Instant updatedAt
 	) {
@@ -56,7 +56,7 @@ public class Experience {
 		this.reviewDeadline = reviewDeadline;
 		this.isReviewSubmitted = isReviewSubmitted;
 		this.detailLink = detailLink;
-		this.platforms = platforms;
+		this.platformList = platformList;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
@@ -69,7 +69,7 @@ public class Experience {
 		LocalTime reservationTime,
 		LocalDate reviewDeadline,
 		String detailLink,
-		List<ExperiencePlatform> platforms
+		List<ExperiencePlatform> platformList
 	) {
 		validateUserId(userId);
 		return new Experience(
@@ -82,7 +82,7 @@ public class Experience {
 			validatedDeadline(reviewDeadline),
 			null,
 			validatedDetailLink(detailLink),
-			validatedPlatforms(platforms),
+			validatedPlatformList(platformList),
 			null,
 			null
 		);
@@ -98,7 +98,7 @@ public class Experience {
 		LocalDate reviewDeadline,
 		Integer isReviewSubmitted,
 		String detailLink,
-		List<ExperiencePlatform> platforms,
+		List<ExperiencePlatform> platformList,
 		Instant createdAt,
 		Instant updatedAt
 	) {
@@ -112,7 +112,7 @@ public class Experience {
 			reviewDeadline,
 			isReviewSubmitted,
 			detailLink,
-			new ArrayList<>(platforms),
+			new ArrayList<>(platformList),
 			createdAt,
 			updatedAt
 		);
@@ -139,14 +139,14 @@ public class Experience {
 		this.detailLink = validatedDetailLink(detailLink);
 	}
 
-	public void replacePlatforms(List<ExperiencePlatform> platforms) {
-		this.platforms = validatedPlatforms(platforms);
+	public void replacePlatformList(List<ExperiencePlatform> platformList) {
+		this.platformList = validatedPlatformList(platformList);
 	}
 
 	public void setPlatformRegistered(Long platformId, boolean registered) {
 		boolean found = false;
 		List<ExperiencePlatform> next = new ArrayList<>();
-		for (ExperiencePlatform platform : platforms) {
+		for (ExperiencePlatform platform : platformList) {
 			if (platform.getPlatformId().equals(platformId)) {
 				next.add(platform.withRegistered(registered));
 				found = true;
@@ -158,7 +158,7 @@ public class Experience {
 		if (!found) {
 			throw new DomainException("Platform is not linked to this experience");
 		}
-		this.platforms = next;
+		this.platformList = next;
 	}
 
 	public void submitReview() {
@@ -177,7 +177,7 @@ public class Experience {
 	 * Derived: every required platform has registration completed.
 	 */
 	public boolean isRequiredItemsComplete() {
-		return platforms.stream()
+		return platformList.stream()
 			.filter(ExperiencePlatform::isRequired)
 			.allMatch(ExperiencePlatform::isRegistered);
 	}
@@ -218,8 +218,8 @@ public class Experience {
 		return detailLink;
 	}
 
-	public List<ExperiencePlatform> getPlatforms() {
-		return List.copyOf(platforms);
+	public List<ExperiencePlatform> getPlatformList() {
+		return List.copyOf(platformList);
 	}
 
 	public Instant getCreatedAt() {
@@ -272,20 +272,27 @@ public class Experience {
 		return trimmed;
 	}
 
-	private static List<ExperiencePlatform> validatedPlatforms(List<ExperiencePlatform> platforms) {
-		if (platforms == null || platforms.isEmpty()) {
+	private static List<ExperiencePlatform> validatedPlatformList(List<ExperiencePlatform> platformList) {
+		if (platformList == null || platformList.isEmpty()) {
 			throw new DomainException("at least one platform is required");
 		}
 		Set<Long> seen = new HashSet<>();
 		List<ExperiencePlatform> copy = new ArrayList<>();
-		for (ExperiencePlatform platform : platforms) {
+		boolean hasRequired = false;
+		for (ExperiencePlatform platform : platformList) {
 			if (platform == null) {
 				throw new DomainException("platform link is required");
 			}
 			if (!seen.add(platform.getPlatformId())) {
 				throw new DomainException("duplicate platformId");
 			}
+			if (platform.isRequired()) {
+				hasRequired = true;
+			}
 			copy.add(platform);
+		}
+		if (!hasRequired) {
+			throw new DomainException("at least one required platform is required");
 		}
 		return copy;
 	}

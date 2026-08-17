@@ -54,11 +54,11 @@ final class ExperiencePersistenceMapper {
 			registeredIds.add(row.getId().getPlatformId());
 		}
 
-		List<ExperiencePlatform> platforms = new ArrayList<>();
+		List<ExperiencePlatform> platformList = new ArrayList<>();
 		for (ExperiencePlatformJpaEntity row : platformRows) {
 			Long platformId = row.getId().getPlatformId();
 			boolean required = row.getIsRequired() != null;
-			platforms.add(ExperiencePlatform.of(platformId, required, registeredIds.contains(platformId)));
+			platformList.add(ExperiencePlatform.of(platformId, required, registeredIds.contains(platformId)));
 		}
 
 		return Experience.restore(
@@ -71,7 +71,7 @@ final class ExperiencePersistenceMapper {
 			entity.getReviewDeadline(),
 			entity.getIsReviewSubmitted(),
 			entity.getDetailLink(),
-			platforms,
+			platformList,
 			entity.getCreatedAt(),
 			entity.getUpdatedAt()
 		);
