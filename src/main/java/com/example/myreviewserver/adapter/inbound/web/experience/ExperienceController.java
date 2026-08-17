@@ -3,6 +3,7 @@ package com.example.myreviewserver.adapter.inbound.web.experience;
 import com.example.myreviewserver.adapter.inbound.security.CurrentUser;
 import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.experience.CreateExperienceUseCase;
+import com.example.myreviewserver.application.experience.DeleteExperienceUseCase;
 import com.example.myreviewserver.application.experience.GetExperienceUseCase;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
 import com.example.myreviewserver.application.experience.UpdateExperienceUseCase;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @GetMapping: HTTP GET만 받음.
  * @PostMapping: HTTP POST만 받음.
  * @PatchMapping: HTTP PATCH만 받음.
+ * @DeleteMapping: HTTP DELETE만 받음.
  * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
  * @RequestBody: JSON 본문을 요청 객체로 변환.
  * @ResponseStatus: 성공 시 HTTP 상태 코드 지정.
@@ -46,17 +49,20 @@ public class ExperienceController {
 	private final GetExperienceUseCase getExperienceUseCase;
 	private final CreateExperienceUseCase createExperienceUseCase;
 	private final UpdateExperienceUseCase updateExperienceUseCase;
+	private final DeleteExperienceUseCase deleteExperienceUseCase;
 
 	public ExperienceController(
 		ListExperiencesUseCase listExperiencesUseCase,
 		GetExperienceUseCase getExperienceUseCase,
 		CreateExperienceUseCase createExperienceUseCase,
-		UpdateExperienceUseCase updateExperienceUseCase
+		UpdateExperienceUseCase updateExperienceUseCase,
+		DeleteExperienceUseCase deleteExperienceUseCase
 	) {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 		this.getExperienceUseCase = getExperienceUseCase;
 		this.createExperienceUseCase = createExperienceUseCase;
 		this.updateExperienceUseCase = updateExperienceUseCase;
+		this.deleteExperienceUseCase = deleteExperienceUseCase;
 	}
 
 	/** GET /api/experiences/upcoming */
@@ -210,5 +216,26 @@ public class ExperienceController {
 			request.detailLink(),
 			platformList
 		)));
+	}
+
+	/** DELETE /api/experiences/{id} */
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@Operation(
+		summary = "체험 삭제",
+		description = """
+			로그인한 사용자 본인 소유의 체험을 hard delete합니다.
+			연결된 experience_platforms와 등록 완료 행도 함께 삭제됩니다.
+			없거나 다른 사용자 소유이면 Experience not found로 실패합니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "없거나 권한 없음"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public void delete(@PathVariable Long id) {
+		Long userId = CurrentUser.requireUserId();
+		deleteExperienceUseCase.delete(userId, id);
 	}
 }
