@@ -85,7 +85,7 @@ class UpdateExperienceUseCaseTest {
 	}
 
 	@Test
-	void rejectsMissingOtherUsersUnownedPlatformAndEmptyPatch() {
+	void rejectsMissingOtherUsersAndUnownedPlatform() {
 		User owner = userRepository.save(User.create("exp-update-owner@test.com", "owner"));
 		User other = userRepository.save(User.create("exp-update-other@test.com", "other"));
 		Platform own = platformRepository.save(Platform.create(owner.getId(), "블로그", "#111111", 0));
@@ -120,9 +120,5 @@ class UpdateExperienceUseCaseTest {
 			null,
 			List.of(new UpdateExperienceUseCase.PlatformLink(foreign.getId(), true))
 		)).isInstanceOf(DomainException.class).hasMessage("Platform not found");
-
-		assertThatThrownBy(() -> updateExperienceUseCase.update(
-			owner.getId(), saved.getId(), null, null, null, null, null, null, null
-		)).isInstanceOf(DomainException.class).hasMessage("at least one field is required");
 	}
 }

@@ -57,16 +57,6 @@ public class UpdateExperienceUseCase {
 			throw new DomainException("experienceId is required");
 		}
 
-		boolean hasReservation = reservationDate != null || reservationTime != null;
-		if (name == null
-			&& experienceType == null
-			&& !hasReservation
-			&& reviewDeadline == null
-			&& detailLink == null
-			&& platformList == null) {
-			throw new DomainException("at least one field is required");
-		}
-
 		Experience experience = experienceRepository.findByIdAndUserId(experienceId, userId)
 			.orElseThrow(() -> new DomainException("Experience not found"));
 
@@ -76,7 +66,7 @@ public class UpdateExperienceUseCase {
 		if (experienceType != null) {
 			experience.changeType(experienceType);
 		}
-		if (hasReservation) {
+		if (reservationDate != null || reservationTime != null) {
 			experience.changeReservation(
 				reservationDate != null ? reservationDate : experience.getReservationDate(),
 				reservationTime != null ? reservationTime : experience.getReservationTime()
