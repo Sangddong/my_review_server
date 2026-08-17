@@ -7,6 +7,7 @@ import com.example.myreviewserver.application.experience.DeleteExperienceUseCase
 import com.example.myreviewserver.application.experience.GetExperienceUseCase;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
 import com.example.myreviewserver.application.experience.UpdateExperienceUseCase;
+import com.example.myreviewserver.application.experience.UpdateExperiencePlatformRegistrationUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @PostMapping: HTTP POST만 받음.
  * @PatchMapping: HTTP PATCH만 받음.
  * @DeleteMapping: HTTP DELETE만 받음.
+ * @PutMapping: HTTP PUT만 받음.
  * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
  * @RequestBody: JSON 본문을 요청 객체로 변환.
  * @ResponseStatus: 성공 시 HTTP 상태 코드 지정.
@@ -50,19 +53,22 @@ public class ExperienceController {
 	private final CreateExperienceUseCase createExperienceUseCase;
 	private final UpdateExperienceUseCase updateExperienceUseCase;
 	private final DeleteExperienceUseCase deleteExperienceUseCase;
+	private final UpdateExperiencePlatformRegistrationUseCase updateExperiencePlatformRegistrationUseCase;
 
 	public ExperienceController(
 		ListExperiencesUseCase listExperiencesUseCase,
 		GetExperienceUseCase getExperienceUseCase,
 		CreateExperienceUseCase createExperienceUseCase,
 		UpdateExperienceUseCase updateExperienceUseCase,
-		DeleteExperienceUseCase deleteExperienceUseCase
+		DeleteExperienceUseCase deleteExperienceUseCase,
+		UpdateExperiencePlatformRegistrationUseCase updateExperiencePlatformRegistrationUseCase
 	) {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 		this.getExperienceUseCase = getExperienceUseCase;
 		this.createExperienceUseCase = createExperienceUseCase;
 		this.updateExperienceUseCase = updateExperienceUseCase;
 		this.deleteExperienceUseCase = deleteExperienceUseCase;
+		this.updateExperiencePlatformRegistrationUseCase = updateExperiencePlatformRegistrationUseCase;
 	}
 
 	/** GET /api/experiences/upcoming */
@@ -237,5 +243,35 @@ public class ExperienceController {
 	public void delete(@PathVariable Long id) {
 		Long userId = CurrentUser.requireUserId();
 		deleteExperienceUseCase.delete(userId, id);
+	}
+
+	/** PUT /api/experiences/{id}/platforms/{platformId}/registration */
+	@PutMapping("/{id}/platforms/{platformId}/registration")
+	@Operation(
+		summary = "체험 플랫폼 등록 상태 변경",
+		description = """
+			로그인한 사용자 본인 소유의 체험에 연결된 플랫폼의 등록 완료/해제를 바꿉니다.
+			registered=true이면 experience_registered_platforms 행이 생기고, false이면 삭제됩니다.
+			체험에 연결되지 않은 platformId는 실패합니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "변경 성공",
+			content = @Content(schema = @Schema(implementation = ExperienceApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "검증 실패 또는 없거나 권한 없음"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<ExperienceResponse> updatePlatformRegistration(
+		@PathVariable Long id,
+		@PathVariable Long platformId,
+		@RequestBody UpdateExperiencePlatformRegistrationRequest request
+	) {
+		Long userId = CurrentUser.requireUserId();
+		return ApiResponse.ok(ExperienceResponse.from(
+			updateExperiencePlatformRegistrationUseCase.update(userId, id, platformId, request.registered())
+		));
 	}
 }

@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -305,6 +306,68 @@ class ExperienceControllerTest {
 
 		mockMvc.perform(delete("/api/experiences/" + experience.getId())
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Experience not found"));
+	}
+
+	@Test
+	void updatesPlatformRegistrationForAuthenticatedOwner() throws Exception {
+		User owner = userRepository.save(User.create("exp-reg-api@test.com", "owner"));
+		User other = userRepository.save(User.create("exp-reg-api-other@test.com", "other"));
+		String ownerJwt = jwtTokenProvider.createAccessToken(owner.getId(), owner.getNickname());
+		String otherJwt = jwtTokenProvider.createAccessToken(other.getId(), other.getNickname());
+		Platform blog = platformRepository.save(Platform.create(owner.getId(), "블로그", "#111111", 0));
+		Platform insta = platformRepository.save(Platform.create(owner.getId(), "인스타", "#222222", 1));
+
+		Experience experience = experienceRepository.save(Experience.create(
+			owner.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(blog.getId(), true), ExperiencePlatform.of(insta.getId(), false))
+		));
+
+		String path = "/api/experiences/" + experience.getId() + "/platforms/" + blog.getId() + "/registration";
+
+		mockMvc.perform(put(path)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"registered":true}
+					"""))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(put(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"registered":true}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.requiredItemsComplete").value(true))
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(blog.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(true))
+			.andExpect(jsonPath("$.data.platformList[1].registered").value(false));
+
+		mockMvc.perform(put(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"registered":false}
+					"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.requiredItemsComplete").value(false))
+			.andExpect(jsonPath("$.data.platformList[0].registered").value(false));
+
+		mockMvc.perform(put(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"registered":true}
+					"""))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
 	}
