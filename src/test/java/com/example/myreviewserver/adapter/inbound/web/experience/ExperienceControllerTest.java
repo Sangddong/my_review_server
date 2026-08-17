@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.experience;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -205,5 +206,66 @@ class ExperienceControllerTest {
 					""".formatted(required.getId())))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("reviewDeadline is required"));
+	}
+
+	@Test
+	void updatesExperienceForAuthenticatedOwner() throws Exception {
+		User owner = userRepository.save(User.create("exp-update-api@test.com", "owner"));
+		User other = userRepository.save(User.create("exp-update-api-other@test.com", "other"));
+		String ownerJwt = jwtTokenProvider.createAccessToken(owner.getId(), owner.getNickname());
+		String otherJwt = jwtTokenProvider.createAccessToken(other.getId(), other.getNickname());
+		Platform blog = platformRepository.save(Platform.create(owner.getId(), "블로그", "#111111", 0));
+		Platform insta = platformRepository.save(Platform.create(owner.getId(), "인스타", "#222222", 1));
+
+		Experience experience = experienceRepository.save(Experience.create(
+			owner.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			LocalDate.of(2026, 8, 20),
+			LocalTime.of(14, 0),
+			LocalDate.of(2026, 8, 25),
+			"https://example.com",
+			List.of(ExperiencePlatform.of(blog.getId(), true))
+		));
+
+		String body = """
+			{
+			  "name":"성수 디저트",
+			  "experienceType":"DELIVERY",
+			  "platformList":[
+			    {"platformId":%d,"isRequired":true},
+			    {"platformId":%d,"isRequired":false}
+			  ]
+			}
+			""".formatted(blog.getId(), insta.getId());
+
+		mockMvc.perform(patch("/api/experiences/" + experience.getId())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(patch("/api/experiences/" + experience.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.data.name").value("성수 디저트"))
+			.andExpect(jsonPath("$.data.experienceType").value("DELIVERY"))
+			.andExpect(jsonPath("$.data.reservationDate").value("2026-08-20"))
+			.andExpect(jsonPath("$.data.reviewDeadline").value("2026-08-25"))
+			.andExpect(jsonPath("$.data.reviewSubmitted").value(false))
+			.andExpect(jsonPath("$.data.platformList.length()").value(2))
+			.andExpect(jsonPath("$.data.platformList[0].platformId").value(blog.getId().intValue()))
+			.andExpect(jsonPath("$.data.platformList[1].platformId").value(insta.getId().intValue()));
+
+		mockMvc.perform(patch("/api/experiences/" + experience.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+					{"name":"남의것"}
+					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Experience not found"));
 	}
 }

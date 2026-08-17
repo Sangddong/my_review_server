@@ -5,6 +5,7 @@ import com.example.myreviewserver.adapter.inbound.web.ApiResponse;
 import com.example.myreviewserver.application.experience.CreateExperienceUseCase;
 import com.example.myreviewserver.application.experience.GetExperienceUseCase;
 import com.example.myreviewserver.application.experience.ListExperiencesUseCase;
+import com.example.myreviewserver.application.experience.UpdateExperienceUseCase;
 import com.example.myreviewserver.config.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @SecurityRequirement: Swagger Authorize(JWT) 필요.
  * @GetMapping: HTTP GET만 받음.
  * @PostMapping: HTTP POST만 받음.
+ * @PatchMapping: HTTP PATCH만 받음.
  * @PathVariable: URL 경로의 {id}를 메서드 인자로 받음.
  * @RequestBody: JSON 본문을 요청 객체로 변환.
  * @ResponseStatus: 성공 시 HTTP 상태 코드 지정.
@@ -42,15 +45,18 @@ public class ExperienceController {
 	private final ListExperiencesUseCase listExperiencesUseCase;
 	private final GetExperienceUseCase getExperienceUseCase;
 	private final CreateExperienceUseCase createExperienceUseCase;
+	private final UpdateExperienceUseCase updateExperienceUseCase;
 
 	public ExperienceController(
 		ListExperiencesUseCase listExperiencesUseCase,
 		GetExperienceUseCase getExperienceUseCase,
-		CreateExperienceUseCase createExperienceUseCase
+		CreateExperienceUseCase createExperienceUseCase,
+		UpdateExperienceUseCase updateExperienceUseCase
 	) {
 		this.listExperiencesUseCase = listExperiencesUseCase;
 		this.getExperienceUseCase = getExperienceUseCase;
 		this.createExperienceUseCase = createExperienceUseCase;
+		this.updateExperienceUseCase = updateExperienceUseCase;
 	}
 
 	/** GET /api/experiences/upcoming */
@@ -154,6 +160,48 @@ public class ExperienceController {
 				.toList();
 		return ApiResponse.ok(ExperienceResponse.from(createExperienceUseCase.create(
 			userId,
+			request.name(),
+			request.experienceType(),
+			request.reservationDate(),
+			request.reservationTime(),
+			request.reviewDeadline(),
+			request.detailLink(),
+			platformList
+		)));
+	}
+
+	/** PATCH /api/experiences/{id} */
+	@PatchMapping("/{id}")
+	@Operation(
+		summary = "체험 편집",
+		description = """
+			로그인한 사용자 본인 소유의 체험 기본 필드와 플랫폼 구성을 부분 수정합니다.
+			보낸 필드만 바뀌며, 제출 상태와 플랫폼 등록 완료 여부는 이 API에서 바꾸지 않습니다.
+			platformList를 보내면 구성을 통째로 바꾸고, 남아 있는 플랫폼의 등록 상태는 유지합니다.
+			"""
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "수정 성공",
+			content = @Content(schema = @Schema(implementation = ExperienceApiResponse.class))
+		),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "검증 실패 또는 없거나 권한 없음"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
+	})
+	public ApiResponse<ExperienceResponse> update(
+		@PathVariable Long id,
+		@RequestBody UpdateExperienceRequest request
+	) {
+		Long userId = CurrentUser.requireUserId();
+		List<UpdateExperienceUseCase.PlatformLink> platformList = request.platformList() == null
+			? null
+			: request.platformList().stream()
+				.map(p -> new UpdateExperienceUseCase.PlatformLink(p.platformId(), p.isRequired()))
+				.toList();
+		return ApiResponse.ok(ExperienceResponse.from(updateExperienceUseCase.update(
+			userId,
+			id,
 			request.name(),
 			request.experienceType(),
 			request.reservationDate(),
