@@ -1,5 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.experience;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -265,6 +267,44 @@ class ExperienceControllerTest {
 				.content("""
 					{"name":"남의것"}
 					"""))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Experience not found"));
+	}
+
+	@Test
+	void deletesExperienceForAuthenticatedOwner() throws Exception {
+		User owner = userRepository.save(User.create("exp-delete-api@test.com", "owner"));
+		User other = userRepository.save(User.create("exp-delete-api-other@test.com", "other"));
+		String ownerJwt = jwtTokenProvider.createAccessToken(owner.getId(), owner.getNickname());
+		String otherJwt = jwtTokenProvider.createAccessToken(other.getId(), other.getNickname());
+
+		Experience experience = experienceRepository.save(Experience.create(
+			owner.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(10L, true))
+		));
+
+		mockMvc.perform(delete("/api/experiences/" + experience.getId()))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete("/api/experiences/" + experience.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Experience not found"));
+		assertThat(experienceRepository.findById(experience.getId())).isPresent();
+
+		mockMvc.perform(delete("/api/experiences/" + experience.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+			.andExpect(status().isNoContent());
+		assertThat(experienceRepository.findById(experience.getId())).isEmpty();
+
+		mockMvc.perform(delete("/api/experiences/" + experience.getId())
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
 	}
