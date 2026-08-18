@@ -7,6 +7,7 @@ import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,19 +50,20 @@ public class PurgeWithdrawnUsersUseCase {
 
 		List<User> expired = userRepository.findDeletedBefore(cutoff);
 		log.info("Purging {} withdrawn users deleted before {}", expired.size(), cutoff);
-
-		int deleted = 0;
-		for (User user : expired) {
-			Long userId = user.getId();
-			experienceRepository.deleteAllByUserId(userId);
-			platformRepository.deleteAllByUserId(userId);
-			deviceTokenRepository.deleteAllByUserId(userId);
-			if (userRepository.deleteById(userId)) {
-				deleted++;
-				log.info("Hard-deleted withdrawn user id={}", userId);
-			}
+		if (expired.isEmpty()) {
+			return 0;
 		}
-		log.info("Purged {} withdrawn users", deleted);
+
+		List<Long> userIdList = new ArrayList<>();
+		for (User user : expired) {
+			userIdList.add(user.getId());
+		}
+
+		experienceRepository.deleteAllByUserIdIn(userIdList);
+		platformRepository.deleteAllByUserIdIn(userIdList);
+		deviceTokenRepository.deleteAllByUserIdIn(userIdList);
+		int deleted = userRepository.deleteAllByIdIn(userIdList);
+		log.info("Hard-deleted withdrawn user ids={}", userIdList);
 		return deleted;
 	}
 }

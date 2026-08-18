@@ -65,5 +65,5 @@ public interface SpringDataPlatformRepository extends JpaRepository<PlatformJpaE
 		@Param("userId") Long userId
 	);
 
-	long deleteByUserId(Long userId);
+	long deleteByUserIdIn(List<Long> userIds);
 }

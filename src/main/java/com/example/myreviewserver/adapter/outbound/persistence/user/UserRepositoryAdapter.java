@@ -72,12 +72,11 @@ public class UserRepositoryAdapter implements UserRepository {
 	}
 
 	@Override
-	public boolean deleteById(Long id) {
-		if (id == null || userRepository.findById(id).isEmpty()) {
-			return false;
+	public int deleteAllByIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return 0;
 		}
-		oauthAccountRepository.deleteByUserId(id);
-		userRepository.deleteById(id);
-		return true;
+		oauthAccountRepository.deleteByUserIdIn(userIdList);
+		return (int) userRepository.deleteByIdIn(userIdList);
 	}
 }

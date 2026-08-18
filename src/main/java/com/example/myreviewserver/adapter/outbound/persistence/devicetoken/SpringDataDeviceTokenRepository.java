@@ -12,5 +12,5 @@ public interface SpringDataDeviceTokenRepository extends JpaRepository<DeviceTok
 
 	long deleteByUserIdAndToken(Long userId, String token);
 
-	long deleteByUserId(Long userId);
+	long deleteByUserIdIn(List<Long> userIds);
 }

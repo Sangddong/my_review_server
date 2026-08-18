@@ -102,13 +102,16 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 	}
 
 	@Override
-	public void deleteAllByUserId(Long userId) {
-		List<ExperienceJpaEntity> experiences = experienceRepository.findByUserId(userId);
-		for (ExperienceJpaEntity experience : experiences) {
-			registeredPlatformRepository.deleteByIdExperienceId(experience.getId());
-			platformLinkRepository.deleteByIdExperienceId(experience.getId());
-			experienceRepository.delete(experience);
+	public void deleteAllByUserIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return;
 		}
+		List<Long> experienceIdList = experienceRepository.findIdsByUserIdIn(userIdList);
+		if (!experienceIdList.isEmpty()) {
+			registeredPlatformRepository.deleteByIdExperienceIdIn(experienceIdList);
+			platformLinkRepository.deleteByIdExperienceIdIn(experienceIdList);
+		}
+		experienceRepository.deleteByUserIdIn(userIdList);
 	}
 
 	private void replaceLinks(Long experienceId, List<ExperiencePlatform> platformList) {

@@ -21,5 +21,5 @@ public interface ExperienceRepository {
 
 	boolean deleteByIdAndUserId(Long id, Long userId);
 
-	void deleteAllByUserId(Long userId);
+	void deleteAllByUserIdIn(List<Long> userIdList);
 }

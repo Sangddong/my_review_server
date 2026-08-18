@@ -9,4 +9,6 @@ public interface SpringDataExperiencePlatformRepository
 	List<ExperiencePlatformJpaEntity> findByIdExperienceId(Long experienceId);
 
 	void deleteByIdExperienceId(Long experienceId);
+
+	void deleteByIdExperienceIdIn(List<Long> experienceIds);
 }

@@ -16,5 +16,5 @@ public interface DeviceTokenRepository {
 
 	boolean deleteByUserIdAndToken(Long userId, String token);
 
-	void deleteAllByUserId(Long userId);
+	void deleteAllByUserIdIn(List<Long> userIdList);
 }

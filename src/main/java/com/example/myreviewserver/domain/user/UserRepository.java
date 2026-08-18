@@ -16,5 +16,5 @@ public interface UserRepository {
 
 	List<User> findDeletedBefore(Instant cutoff);
 
-	boolean deleteById(Long id);
+	int deleteAllByIdIn(List<Long> userIdList);
 }

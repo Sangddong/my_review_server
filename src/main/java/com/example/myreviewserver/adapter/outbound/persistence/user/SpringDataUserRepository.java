@@ -7,4 +7,6 @@ import java.util.List;
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
 
 	List<UserJpaEntity> findByIsDeletedAndDeletedAtBefore(Integer isDeleted, Instant deletedAt);
+
+	long deleteByIdIn(List<Long> ids);
 }

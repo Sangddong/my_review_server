@@ -44,5 +44,5 @@ public interface PlatformRepository {
 	 */
 	boolean reorderActiveByUserId(Long userId, List<Long> orderedIds);
 
-	void deleteAllByUserId(Long userId);
+	void deleteAllByUserIdIn(List<Long> userIdList);
 }

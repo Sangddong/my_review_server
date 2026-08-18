@@ -142,7 +142,10 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 	}
 
 	@Override
-	public void deleteAllByUserId(Long userId) {
-		springDataPlatformRepository.deleteByUserId(userId);
+	public void deleteAllByUserIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return;
+		}
+		springDataPlatformRepository.deleteByUserIdIn(userIdList);
 	}
 }
