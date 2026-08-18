@@ -62,6 +62,17 @@ public class DeviceTokenRepositoryAdapter implements DeviceTokenRepository {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	public List<DeviceToken> findAllByUserIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return List.of();
+		}
+		return springDataDeviceTokenRepository.findByUserIdIn(userIdList).stream()
+			.map(DeviceTokenPersistenceMapper::toDomain)
+			.toList();
+	}
+
+	@Override
 	public boolean deleteByUserIdAndToken(Long userId, String token) {
 		return springDataDeviceTokenRepository.deleteByUserIdAndToken(userId, token) > 0;
 	}
