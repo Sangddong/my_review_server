@@ -1,5 +1,7 @@
 package com.example.myreviewserver.domain.user;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -11,4 +13,8 @@ public interface UserRepository {
 	Optional<User> findByProvider(AuthProvider provider, String providerUserId);
 
 	void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId);
+
+	List<User> findDeletedBefore(Instant cutoff);
+
+	int deleteAllByIdIn(List<Long> userIdList);
 }

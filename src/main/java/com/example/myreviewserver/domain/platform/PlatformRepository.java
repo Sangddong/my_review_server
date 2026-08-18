@@ -43,4 +43,6 @@ public interface PlatformRepository {
 	 * orderedIds index becomes sortOrder. Returns false when updated row count mismatches.
 	 */
 	boolean reorderActiveByUserId(Long userId, List<Long> orderedIds);
+
+	void deleteAllByUserIdIn(List<Long> userIdList);
 }

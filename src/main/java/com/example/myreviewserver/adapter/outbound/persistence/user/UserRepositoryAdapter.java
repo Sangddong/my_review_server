@@ -5,6 +5,8 @@ import com.example.myreviewserver.domain.user.AuthProvider;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,5 +61,22 @@ public class UserRepositoryAdapter implements UserRepository {
 	@Override
 	public void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId) {
 		oauthAccountRepository.save(UserOauthAccountJpaEntity.of(userId, provider, providerUserId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<User> findDeletedBefore(Instant cutoff) {
+		return userRepository.findByIsDeletedAndDeletedAtBefore(1, cutoff).stream()
+			.map(UserPersistenceMapper::toDomain)
+			.toList();
+	}
+
+	@Override
+	public int deleteAllByIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return 0;
+		}
+		oauthAccountRepository.deleteByUserIdIn(userIdList);
+		return (int) userRepository.deleteByIdIn(userIdList);
 	}
 }

@@ -140,4 +140,12 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 		entityManager.clear();
 		return updated == orderedIds.size();
 	}
+
+	@Override
+	public void deleteAllByUserIdIn(List<Long> userIdList) {
+		if (userIdList == null || userIdList.isEmpty()) {
+			return;
+		}
+		springDataPlatformRepository.deleteByUserIdIn(userIdList);
+	}
 }

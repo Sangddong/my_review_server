@@ -41,4 +41,9 @@ public interface SpringDataExperienceRepository extends JpaRepository<Experience
 		  e.id asc
 		""")
 	List<ExperienceJpaEntity> findCompletedByUserIdOrderByReservationAscIdAsc(@Param("userId") Long userId);
+
+	@Query("select e.id from ExperienceJpaEntity e where e.userId in :userIds")
+	List<Long> findIdsByUserIdIn(@Param("userIds") List<Long> userIds);
+
+	long deleteByUserIdIn(List<Long> userIds);
 }

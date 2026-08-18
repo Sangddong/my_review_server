@@ -54,6 +54,14 @@ public class User {
 		this.lastLoginAt = Instant.now();
 	}
 
+	public void withdraw(Instant deletedAt) {
+		if (deletedAt == null) {
+			throw new DomainException("deletedAt is required");
+		}
+		this.isDeleted = 1;
+		this.deletedAt = deletedAt;
+	}
+
 	public void ensureActive() {
 		if (isDeleted != null) {
 			throw new DomainException("User is deleted");

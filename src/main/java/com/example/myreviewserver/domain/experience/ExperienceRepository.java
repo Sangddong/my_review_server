@@ -20,4 +20,6 @@ public interface ExperienceRepository {
 	List<Experience> findCompletedByUserIdOrderByReservationAscIdAsc(Long userId);
 
 	boolean deleteByIdAndUserId(Long id, Long userId);
+
+	void deleteAllByUserIdIn(List<Long> userIdList);
 }
