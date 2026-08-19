@@ -5,6 +5,7 @@ import com.example.myreviewserver.domain.experience.ExperiencePlatform;
 import com.example.myreviewserver.domain.experience.ExperienceRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -86,6 +87,16 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 			.findCompletedByUserIdOrderByReservationAscIdAsc(userId)
 			.stream()
 			.map(this::toDomain)
+			.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Experience> findUnsubmittedByReviewDeadlineBetween(LocalDate from, LocalDate to) {
+		return experienceRepository
+			.findUnsubmittedByReviewDeadlineBetween(from, to)
+			.stream()
+			.map(ExperiencePersistenceMapper::toDomainMinimal)
 			.toList();
 	}
 

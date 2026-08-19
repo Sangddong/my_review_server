@@ -1,5 +1,6 @@
 package com.example.myreviewserver.adapter.outbound.persistence.experience;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,6 +42,17 @@ public interface SpringDataExperienceRepository extends JpaRepository<Experience
 		  e.id asc
 		""")
 	List<ExperienceJpaEntity> findCompletedByUserIdOrderByReservationAscIdAsc(@Param("userId") Long userId);
+
+	@Query("""
+		select e from ExperienceJpaEntity e
+		where e.isReviewSubmitted is null
+		  and e.reviewDeadline between :from and :to
+		order by e.reviewDeadline asc, e.id asc
+		""")
+	List<ExperienceJpaEntity> findUnsubmittedByReviewDeadlineBetween(
+		@Param("from") LocalDate from,
+		@Param("to") LocalDate to
+	);
 
 	@Query("select e.id from ExperienceJpaEntity e where e.userId in :userIds")
 	List<Long> findIdsByUserIdIn(@Param("userIds") List<Long> userIds);
