@@ -10,6 +10,8 @@ public interface SpringDataDeviceTokenRepository extends JpaRepository<DeviceTok
 
 	List<DeviceTokenJpaEntity> findByUserIdOrderByIdAsc(Long userId);
 
+	List<DeviceTokenJpaEntity> findByUserIdIn(List<Long> userIds);
+
 	long deleteByUserIdAndToken(Long userId, String token);
 
 	long deleteByUserIdIn(List<Long> userIds);
