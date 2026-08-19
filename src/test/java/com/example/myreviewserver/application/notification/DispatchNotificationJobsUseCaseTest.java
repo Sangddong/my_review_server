@@ -16,7 +16,8 @@ class DispatchNotificationJobsUseCaseTest {
 	DispatchNotificationJobsUseCase dispatchNotificationJobsUseCase;
 
 	@Test
-	void runsWithNoJobRunners() {
-		assertThat(dispatchNotificationJobsUseCase.execute(Instant.parse("2026-08-18T00:00:00Z"))).isEqualTo(0);
+	void runsRegisteredJobRunners() {
+		// D3ReviewDeadlineJobRunner 이 등록되어 있으므로 runner 수 >= 1
+		assertThat(dispatchNotificationJobsUseCase.execute(Instant.parse("2026-08-18T00:00:00Z"))).isGreaterThanOrEqualTo(1);
 	}
 }

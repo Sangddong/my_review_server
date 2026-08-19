@@ -1,5 +1,6 @@
 package com.example.myreviewserver.domain.experience;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,8 @@ public interface ExperienceRepository {
 	Optional<Experience> findById(Long id);
 
 	Optional<Experience> findByIdAndUserId(Long id, Long userId);
+
+	List<Experience> findUnsubmittedByReviewDeadlineBetween(LocalDate from, LocalDate to);
 
 	List<Experience> findUpcomingByUserIdOrderByReservationAscIdAsc(Long userId);
 

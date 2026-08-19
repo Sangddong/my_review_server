@@ -44,6 +44,27 @@ final class ExperiencePersistenceMapper {
 		);
 	}
 
+	/**
+	 * Converts entity to domain without loading platform links.
+	 * Use only when platform data is not needed (e.g. notification queries).
+	 */
+	static Experience toDomainMinimal(ExperienceJpaEntity entity) {
+		return Experience.restore(
+			entity.getId(),
+			entity.getUserId(),
+			entity.getName(),
+			entity.getExperienceType(),
+			entity.getReservationDate(),
+			entity.getReservationTime(),
+			entity.getReviewDeadline(),
+			entity.getIsReviewSubmitted(),
+			entity.getDetailLink(),
+			List.of(),
+			entity.getCreatedAt(),
+			entity.getUpdatedAt()
+		);
+	}
+
 	static Experience toDomain(
 		ExperienceJpaEntity entity,
 		List<ExperiencePlatformJpaEntity> platformRows,
