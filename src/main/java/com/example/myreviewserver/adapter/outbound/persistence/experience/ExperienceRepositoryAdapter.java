@@ -101,6 +101,16 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	public List<Experience> findByReservationDate(LocalDate reservationDate) {
+		return experienceRepository
+			.findByReservationDate(reservationDate)
+			.stream()
+			.map(ExperiencePersistenceMapper::toDomainMinimal)
+			.toList();
+	}
+
+	@Override
 	public boolean deleteByIdAndUserId(Long id, Long userId) {
 		Optional<ExperienceJpaEntity> found = experienceRepository.findByIdAndUserId(id, userId);
 		if (found.isEmpty()) {

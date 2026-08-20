@@ -54,6 +54,16 @@ public interface SpringDataExperienceRepository extends JpaRepository<Experience
 		@Param("to") LocalDate to
 	);
 
+	@Query("""
+		select e from ExperienceJpaEntity e
+		where e.reservationDate = :reservationDate
+		order by
+		  case when e.reservationTime is null then 1 else 0 end,
+		  e.reservationTime asc,
+		  e.id asc
+		""")
+	List<ExperienceJpaEntity> findByReservationDate(@Param("reservationDate") LocalDate reservationDate);
+
 	@Query("select e.id from ExperienceJpaEntity e where e.userId in :userIds")
 	List<Long> findIdsByUserIdIn(@Param("userIds") List<Long> userIds);
 

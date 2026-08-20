@@ -18,6 +18,8 @@ public interface ExperienceRepository {
 
 	List<Experience> findUnsubmittedByReviewDeadlineBetween(LocalDate from, LocalDate to);
 
+	List<Experience> findByReservationDate(LocalDate reservationDate);
+
 	List<Experience> findUpcomingByUserIdOrderByReservationAscIdAsc(Long userId);
 
 	List<Experience> findCompletedByUserIdOrderByReservationAscIdAsc(Long userId);
