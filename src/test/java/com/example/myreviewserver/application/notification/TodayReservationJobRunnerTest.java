@@ -20,12 +20,16 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class TodayReservationJobRunnerTest {
 
 	@Autowired
@@ -47,7 +51,7 @@ class TodayReservationJobRunnerTest {
 	NotificationSendRepository notificationSendRepository;
 
 	@Test
-	void sendsTodayPushAndRecordsForExperienceReservedToday() {
+	void sendsTodayPushAndRecordsForExperienceReservedToday(CapturedOutput output) {
 		LocalDate today = LocalDate.now(ZoneOffset.UTC);
 		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
 
@@ -55,7 +59,7 @@ class TodayReservationJobRunnerTest {
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience experience = experienceRepository.save(Experience.create(
 			user.getId(),
-			"오늘 예약 체험",
+			"넥쿨러",
 			ExperienceType.VISIT,
 			today,
 			LocalTime.of(14, 0),
@@ -71,6 +75,8 @@ class TodayReservationJobRunnerTest {
 			List.of(experience.getId()),
 			List.of(TodayReservationJobRunner.RULE_KEY)
 		)).hasSize(1);
+		assertThat(output.getOut()).contains("넥쿨러 오늘 체험 일정이 있어요");
+		assertThat(output.getOut()).contains("오늘 체험할 일정을 확인해보세요");
 	}
 
 	@Test

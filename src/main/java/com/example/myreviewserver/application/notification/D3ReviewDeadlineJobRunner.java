@@ -21,8 +21,6 @@ import org.springframework.stereotype.Component;
 public class D3ReviewDeadlineJobRunner implements NotificationJobRunner {
 
 	static final String RULE_KEY = "D3";
-	private static final String TITLE = "리뷰 제출일이 임박한 체험이 있어요";
-	private static final String BODY = "마감까지 3일 남았어요. 리뷰를 제출해주세요!";
 
 	private static final Logger log = LoggerFactory.getLogger(D3ReviewDeadlineJobRunner.class);
 
@@ -55,8 +53,8 @@ public class D3ReviewDeadlineJobRunner implements NotificationJobRunner {
 				experience.getUserId(),
 				experience.getId(),
 				RULE_KEY,
-				TITLE,
-				BODY
+				NotificationCopy.d3Title(experience.getName()),
+				NotificationCopy.d3Body()
 			));
 		}
 		int sent = sendPushNotificationUseCase.execute(commandList);
