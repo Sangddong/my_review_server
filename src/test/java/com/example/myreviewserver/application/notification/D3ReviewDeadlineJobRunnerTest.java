@@ -19,12 +19,16 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class D3ReviewDeadlineJobRunnerTest {
 
 	@Autowired
@@ -46,7 +50,7 @@ class D3ReviewDeadlineJobRunnerTest {
 	NotificationSendRepository notificationSendRepository;
 
 	@Test
-	void sendsD3PushAndRecordsForUnsubmittedExperienceDue3DaysLater() {
+	void sendsD3PushAndRecordsForUnsubmittedExperienceDue3DaysLater(CapturedOutput output) {
 		LocalDate today = LocalDate.now(ZoneOffset.UTC);
 		LocalDate deadline = today.plusDays(3);
 		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
@@ -55,7 +59,7 @@ class D3ReviewDeadlineJobRunnerTest {
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience experience = experienceRepository.save(Experience.create(
 			user.getId(),
-			"D3 테스트 체험",
+			"넥쿨러",
 			ExperienceType.VISIT,
 			null,
 			null,
@@ -71,6 +75,8 @@ class D3ReviewDeadlineJobRunnerTest {
 			List.of(experience.getId()),
 			List.of(D3ReviewDeadlineJobRunner.RULE_KEY)
 		)).hasSize(1);
+		assertThat(output.getOut()).contains("넥쿨러 리뷰 마감 3일 전입니다");
+		assertThat(output.getOut()).contains("마감일 전에 리뷰를 작성하여 제출해주세요");
 	}
 
 	@Test

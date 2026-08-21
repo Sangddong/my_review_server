@@ -21,8 +21,6 @@ import org.springframework.stereotype.Component;
 public class TodayReservationJobRunner implements NotificationJobRunner {
 
 	static final String RULE_KEY = "TODAY";
-	private static final String TITLE = "오늘 체험할 일정을 확인해보세요";
-	private static final String BODY = "오늘 예약된 체험이 있어요.";
 
 	private static final Logger log = LoggerFactory.getLogger(TodayReservationJobRunner.class);
 
@@ -54,8 +52,8 @@ public class TodayReservationJobRunner implements NotificationJobRunner {
 				experience.getUserId(),
 				experience.getId(),
 				RULE_KEY,
-				TITLE,
-				BODY
+				NotificationCopy.todayTitle(experience.getName()),
+				NotificationCopy.todayBody()
 			));
 		}
 		int sent = sendPushNotificationUseCase.execute(commandList);
