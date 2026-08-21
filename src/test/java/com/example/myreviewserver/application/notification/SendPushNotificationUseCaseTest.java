@@ -9,6 +9,8 @@ import com.example.myreviewserver.domain.experience.Experience;
 import com.example.myreviewserver.domain.experience.ExperiencePlatform;
 import com.example.myreviewserver.domain.experience.ExperienceRepository;
 import com.example.myreviewserver.domain.experience.ExperienceType;
+import com.example.myreviewserver.domain.notification.Notification;
+import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.notification.NotificationSend;
 import com.example.myreviewserver.domain.notification.NotificationSendRepository;
 import com.example.myreviewserver.domain.platform.Platform;
@@ -44,8 +46,11 @@ class SendPushNotificationUseCaseTest {
 	@Autowired
 	NotificationSendRepository notificationSendRepository;
 
+	@Autowired
+	NotificationRepository notificationRepository;
+
 	@Test
-	void recordsSendAndSkipsDuplicateRuleForSameExperience() {
+	void recordsSendAndInboxAndSkipsDuplicateRuleForSameExperience() {
 		User user = userRepository.save(User.create("notify-send@test.com", "notify-send"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience experience = experienceRepository.save(Experience.create(
@@ -65,8 +70,8 @@ class SendPushNotificationUseCaseTest {
 			user.getId(),
 			experience.getId(),
 			"D3",
-			"리뷰 제출일이 임박한 체험이 있어요",
-			"마감 3일 전입니다"
+			"성수 카페 리뷰 마감 3일 전입니다",
+			"마감일 전에 리뷰를 작성하여 제출해주세요"
 		);
 
 		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(1);
@@ -78,11 +83,20 @@ class SendPushNotificationUseCaseTest {
 		assertThat(first.get(0).getUserId()).isEqualTo(user.getId());
 		assertThat(first.get(0).getRuleKey()).isEqualTo("D3");
 
+		List<Notification> inbox = notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId());
+		assertThat(inbox).hasSize(1);
+		assertThat(inbox.get(0).getExperienceId()).isEqualTo(experience.getId());
+		assertThat(inbox.get(0).getRuleKey()).isEqualTo("D3");
+		assertThat(inbox.get(0).getTitle()).isEqualTo("성수 카페 리뷰 마감 3일 전입니다");
+		assertThat(inbox.get(0).getBody()).isEqualTo("마감일 전에 리뷰를 작성하여 제출해주세요");
+		assertThat(inbox.get(0).isRead()).isFalse();
+
 		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(0);
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
 			List.of("D3")
 		)).hasSize(1);
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
 	}
 
 	@Test
@@ -105,8 +119,8 @@ class SendPushNotificationUseCaseTest {
 				user.getId(),
 				experience.getId(),
 				"TODAY",
-				"오늘 체험할 일정을 확인해보세요",
-				"오늘 예약이 있습니다"
+				"한남 식당 오늘 체험 일정이 있어요",
+				"오늘 체험할 일정을 확인해보세요"
 			)
 		));
 
@@ -115,5 +129,6 @@ class SendPushNotificationUseCaseTest {
 			List.of(experience.getId()),
 			List.of("TODAY")
 		)).isEmpty();
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).isEmpty();
 	}
 }
