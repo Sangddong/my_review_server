@@ -2,6 +2,8 @@ package com.example.myreviewserver.application.notification;
 
 import com.example.myreviewserver.domain.devicetoken.DeviceToken;
 import com.example.myreviewserver.domain.devicetoken.DeviceTokenRepository;
+import com.example.myreviewserver.domain.notification.Notification;
+import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.notification.NotificationSend;
 import com.example.myreviewserver.domain.notification.NotificationSendRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
@@ -17,7 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Sends pushes for later notification rules and records them to skip duplicates.
+ * Sends pushes for notification rules, records duplicate-prevention rows,
+ * and saves user inbox notifications.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션.
@@ -30,15 +33,18 @@ public class SendPushNotificationUseCase {
 
 	private final DeviceTokenRepository deviceTokenRepository;
 	private final NotificationSendRepository notificationSendRepository;
+	private final NotificationRepository notificationRepository;
 	private final PushSender pushSender;
 
 	public SendPushNotificationUseCase(
 		DeviceTokenRepository deviceTokenRepository,
 		NotificationSendRepository notificationSendRepository,
+		NotificationRepository notificationRepository,
 		PushSender pushSender
 	) {
 		this.deviceTokenRepository = deviceTokenRepository;
 		this.notificationSendRepository = notificationSendRepository;
+		this.notificationRepository = notificationRepository;
 		this.pushSender = pushSender;
 	}
 
@@ -90,7 +96,8 @@ public class SendPushNotificationUseCase {
 		record PendingDelivery(List<String> tokens, PushMessage message) {
 		}
 
-		List<NotificationSend> toSave = new ArrayList<>();
+		List<NotificationSend> sendRecords = new ArrayList<>();
+		List<Notification> inboxRecords = new ArrayList<>();
 		List<PendingDelivery> deliveries = new ArrayList<>();
 		for (NotificationDispatchCommand command : pending) {
 			List<String> userTokens = tokensByUserId.getOrDefault(command.userId(), List.of());
@@ -103,23 +110,30 @@ public class SendPushNotificationUseCase {
 				);
 				continue;
 			}
-			toSave.add(NotificationSend.create(command.userId(), command.experienceId(), command.ruleKey()));
-			deliveries.add(new PendingDelivery(
-				userTokens,
-				new PushMessage(command.title().trim(), command.body().trim())
+			String title = command.title().trim();
+			String body = command.body().trim();
+			sendRecords.add(NotificationSend.create(command.userId(), command.experienceId(), command.ruleKey()));
+			inboxRecords.add(Notification.create(
+				command.userId(),
+				command.experienceId(),
+				command.ruleKey(),
+				title,
+				body
 			));
+			deliveries.add(new PendingDelivery(userTokens, new PushMessage(title, body)));
 		}
-		if (toSave.isEmpty()) {
+		if (sendRecords.isEmpty()) {
 			return 0;
 		}
-		notificationSendRepository.saveAll(toSave);
+		notificationSendRepository.saveAll(sendRecords);
+		notificationRepository.saveAll(inboxRecords);
 		for (PendingDelivery delivery : deliveries) {
 			for (String token : delivery.tokens()) {
 				pushSender.send(token, delivery.message());
 			}
 		}
-		log.info("Recorded {} notification sends", toSave.size());
-		return toSave.size();
+		log.info("Recorded {} notification sends and inbox rows", sendRecords.size());
+		return sendRecords.size();
 	}
 
 	private static void validate(NotificationDispatchCommand command) {
