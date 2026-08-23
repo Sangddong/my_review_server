@@ -102,6 +102,16 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 
 	@Override
 	@Transactional(readOnly = true)
+	public List<Experience> findUnsubmittedByReviewDeadlineBefore(LocalDate before) {
+		return experienceRepository
+			.findUnsubmittedByReviewDeadlineBefore(before)
+			.stream()
+			.map(ExperiencePersistenceMapper::toDomainMinimal)
+			.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public List<Experience> findByReservationDate(LocalDate reservationDate) {
 		return experienceRepository
 			.findByReservationDate(reservationDate)
