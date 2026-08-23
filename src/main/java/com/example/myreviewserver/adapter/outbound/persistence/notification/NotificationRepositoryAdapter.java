@@ -4,6 +4,7 @@ import com.example.myreviewserver.domain.notification.Notification;
 import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import jakarta.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -44,6 +45,19 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 		NotificationJpaEntity saved = springDataNotificationRepository.saveAndFlush(entity);
 		entityManager.refresh(saved);
 		return NotificationPersistenceMapper.toDomain(saved);
+	}
+
+	@Override
+	public void saveAll(List<Notification> notificationList) {
+		if (notificationList == null || notificationList.isEmpty()) {
+			return;
+		}
+		List<NotificationJpaEntity> entities = new ArrayList<>();
+		for (Notification notification : notificationList) {
+			entities.add(NotificationPersistenceMapper.toNewEntity(notification));
+		}
+		springDataNotificationRepository.saveAll(entities);
+		springDataNotificationRepository.flush();
 	}
 
 	@Override
