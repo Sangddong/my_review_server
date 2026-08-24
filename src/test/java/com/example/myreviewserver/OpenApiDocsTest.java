@@ -35,6 +35,11 @@ class OpenApiDocsTest {
 			.andExpect(jsonPath("$.tags[?(@.name=='Auth')]").isArray())
 			.andExpect(jsonPath("$.paths['/api/auth/naver'].post").exists())
 			.andExpect(jsonPath("$.paths['/api/auth/kakao'].post").exists())
-			.andExpect(jsonPath("$.paths['/api/auth/google'].post").exists());
+			.andExpect(jsonPath("$.paths['/api/auth/google'].post").exists())
+			.andExpect(jsonPath("$.components.schemas.PushPayload").exists())
+			.andExpect(jsonPath("$.components.schemas.PushPayload.properties.notification").exists())
+			.andExpect(jsonPath("$.components.schemas.PushPayload.properties.data.properties.ruleKey").exists())
+			.andExpect(jsonPath("$.components.schemas.PushPayload.properties.data.properties.experienceId").exists())
+			.andExpect(jsonPath("$.components.schemas.PushPayload.properties.data.properties.screen").exists());
 	}
 }
