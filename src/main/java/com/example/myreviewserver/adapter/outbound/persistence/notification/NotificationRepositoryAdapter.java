@@ -76,6 +76,11 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 	}
 
 	@Override
+	public int markAllUnreadAsReadByUserId(Long userId) {
+		return springDataNotificationRepository.markAllUnreadAsReadByUserId(userId);
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public long countUnreadByUserId(Long userId) {
 		return springDataNotificationRepository.countByUserIdAndIsReadIsNull(userId);
