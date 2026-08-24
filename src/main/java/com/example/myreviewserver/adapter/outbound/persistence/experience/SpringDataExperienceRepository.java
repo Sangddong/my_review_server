@@ -56,6 +56,16 @@ public interface SpringDataExperienceRepository extends JpaRepository<Experience
 
 	@Query("""
 		select e from ExperienceJpaEntity e
+		where e.isReviewSubmitted is null
+		  and e.reviewDeadline < :before
+		order by e.reviewDeadline asc, e.id asc
+		""")
+	List<ExperienceJpaEntity> findUnsubmittedByReviewDeadlineBefore(
+		@Param("before") LocalDate before
+	);
+
+	@Query("""
+		select e from ExperienceJpaEntity e
 		where e.reservationDate = :reservationDate
 		order by
 		  case when e.reservationTime is null then 1 else 0 end,
