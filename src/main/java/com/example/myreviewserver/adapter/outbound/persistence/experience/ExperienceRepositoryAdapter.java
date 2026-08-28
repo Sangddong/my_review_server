@@ -121,15 +121,14 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 	}
 
 	@Override
-	public boolean deleteByIdAndUserId(Long id, Long userId) {
-		Optional<ExperienceJpaEntity> found = experienceRepository.findByIdAndUserId(id, userId);
-		if (found.isEmpty()) {
-			return false;
+	public int deleteByUserIdAndIdIn(Long userId, List<Long> idList) {
+		List<Long> experienceIdList = experienceRepository.findIdsByUserIdAndIdIn(userId, idList);
+		if (experienceIdList.isEmpty()) {
+			return 0;
 		}
-		registeredPlatformRepository.deleteByIdExperienceId(id);
-		platformLinkRepository.deleteByIdExperienceId(id);
-		experienceRepository.delete(found.get());
-		return true;
+		registeredPlatformRepository.deleteByIdExperienceIdIn(experienceIdList);
+		platformLinkRepository.deleteByIdExperienceIdIn(experienceIdList);
+		return experienceRepository.deleteByUserIdAndIdIn(userId, idList);
 	}
 
 	@Override

@@ -273,7 +273,7 @@ class ExperienceControllerTest {
 	}
 
 	@Test
-	void deletesExperienceForAuthenticatedOwner() throws Exception {
+	void deletesExperiencesForAuthenticatedOwner() throws Exception {
 		User owner = userRepository.save(User.create("exp-delete-api@test.com", "owner"));
 		User other = userRepository.save(User.create("exp-delete-api-other@test.com", "other"));
 		String ownerJwt = jwtTokenProvider.createAccessToken(owner.getId(), owner.getNickname());
@@ -289,23 +289,35 @@ class ExperienceControllerTest {
 			null,
 			List.of(ExperiencePlatform.of(10L, true))
 		));
+		String path = "/api/experiences";
+		String body = """
+			{"idList":[%d]}
+			""".formatted(experience.getId());
 
-		mockMvc.perform(delete("/api/experiences/" + experience.getId()))
+		mockMvc.perform(delete(path)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isForbidden());
 
-		mockMvc.perform(delete("/api/experiences/" + experience.getId())
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt))
+		mockMvc.perform(delete(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
 		assertThat(experienceRepository.findById(experience.getId())).isPresent();
 
-		mockMvc.perform(delete("/api/experiences/" + experience.getId())
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+		mockMvc.perform(delete(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isNoContent());
 		assertThat(experienceRepository.findById(experience.getId())).isEmpty();
 
-		mockMvc.perform(delete("/api/experiences/" + experience.getId())
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt))
+		mockMvc.perform(delete(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + ownerJwt)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("Experience not found"));
 	}
