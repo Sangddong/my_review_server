@@ -6,6 +6,8 @@ import com.example.myreviewserver.domain.notification.Notification;
 import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.notification.NotificationSend;
 import com.example.myreviewserver.domain.notification.NotificationSendRepository;
+import com.example.myreviewserver.domain.notification.NotificationSetting;
+import com.example.myreviewserver.domain.notification.NotificationSettingRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,17 +36,20 @@ public class SendPushNotificationUseCase {
 	private final DeviceTokenRepository deviceTokenRepository;
 	private final NotificationSendRepository notificationSendRepository;
 	private final NotificationRepository notificationRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
 	private final PushSender pushSender;
 
 	public SendPushNotificationUseCase(
 		DeviceTokenRepository deviceTokenRepository,
 		NotificationSendRepository notificationSendRepository,
 		NotificationRepository notificationRepository,
+		NotificationSettingRepository notificationSettingRepository,
 		PushSender pushSender
 	) {
 		this.deviceTokenRepository = deviceTokenRepository;
 		this.notificationSendRepository = notificationSendRepository;
 		this.notificationRepository = notificationRepository;
+		this.notificationSettingRepository = notificationSettingRepository;
 		this.pushSender = pushSender;
 	}
 
@@ -55,10 +60,17 @@ public class SendPushNotificationUseCase {
 
 		List<Long> experienceIdList = new ArrayList<>();
 		List<String> ruleKeyList = new ArrayList<>();
+		List<Long> allUserIdList = new ArrayList<>();
 		for (NotificationDispatchCommand command : commandList) {
 			validate(command);
 			experienceIdList.add(command.experienceId());
 			ruleKeyList.add(command.ruleKey().trim());
+			allUserIdList.add(command.userId());
+		}
+
+		Set<String> disabledKeys = new HashSet<>();
+		for (NotificationSetting setting : notificationSettingRepository.findDisabledByUserIdIn(allUserIdList)) {
+			disabledKeys.add(pairKey(setting.getUserId(), setting.getRuleKey().name()));
 		}
 
 		List<NotificationSend> existing = notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
@@ -74,7 +86,17 @@ public class SendPushNotificationUseCase {
 		List<Long> userIdList = new ArrayList<>();
 		Set<String> pendingKeys = new HashSet<>();
 		for (NotificationDispatchCommand command : commandList) {
-			String key = pairKey(command.experienceId(), command.ruleKey().trim());
+			String ruleKey = command.ruleKey().trim();
+			if (disabledKeys.contains(pairKey(command.userId(), ruleKey))) {
+				log.info(
+					"Skip push: rule turned off userId={} experienceId={} ruleKey={}",
+					command.userId(),
+					command.experienceId(),
+					ruleKey
+				);
+				continue;
+			}
+			String key = pairKey(command.experienceId(), ruleKey);
 			if (alreadySentKeys.contains(key) || !pendingKeys.add(key)) {
 				continue;
 			}
@@ -82,7 +104,7 @@ public class SendPushNotificationUseCase {
 			userIdList.add(command.userId());
 		}
 		if (pending.isEmpty()) {
-			log.info("Skip push: all {} commands already sent", commandList.size());
+			log.info("Skip push: all {} commands already sent or turned off", commandList.size());
 			return 0;
 		}
 
@@ -166,7 +188,7 @@ public class SendPushNotificationUseCase {
 		}
 	}
 
-	private static String pairKey(Long experienceId, String ruleKey) {
-		return experienceId + ":" + ruleKey;
+	private static String pairKey(Long id, String ruleKey) {
+		return id + ":" + ruleKey;
 	}
 }
