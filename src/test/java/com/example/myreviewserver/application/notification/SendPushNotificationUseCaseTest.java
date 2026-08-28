@@ -11,6 +11,7 @@ import com.example.myreviewserver.domain.experience.ExperienceRepository;
 import com.example.myreviewserver.domain.experience.ExperienceType;
 import com.example.myreviewserver.domain.notification.Notification;
 import com.example.myreviewserver.domain.notification.NotificationRepository;
+import com.example.myreviewserver.domain.notification.NotificationRuleKey;
 import com.example.myreviewserver.domain.notification.NotificationSend;
 import com.example.myreviewserver.domain.notification.NotificationSendRepository;
 import com.example.myreviewserver.domain.platform.Platform;
@@ -52,6 +53,9 @@ class SendPushNotificationUseCaseTest {
 
 	@Autowired
 	NotificationRepository notificationRepository;
+
+	@Autowired
+	UpdateNotificationSettingsUseCase updateNotificationSettingsUseCase;
 
 	@Test
 	void recordsSendAndInboxAndSkipsDuplicateRuleForSameExperience(CapturedOutput output) {
@@ -104,6 +108,95 @@ class SendPushNotificationUseCaseTest {
 			List.of("D3")
 		)).hasSize(1);
 		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
+	}
+
+	@Test
+	void skipsRuleTurnedOffAndSendsAgainWhenTurnedBackOn() {
+		User user = userRepository.save(User.create("notify-off@test.com", "notify-off"));
+		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#333333", 0));
+		Experience experience = experienceRepository.save(Experience.create(
+			user.getId(),
+			"연남 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 27),
+			null,
+			List.of(ExperiencePlatform.of(platform.getId(), true))
+		));
+		deviceTokenRepository.save(DeviceToken.create(user.getId(), "notify-off-token", DevicePlatform.IOS));
+
+		updateNotificationSettingsUseCase.execute(
+			user.getId(),
+			List.of(new NotificationRuleSetting(NotificationRuleKey.D3, false))
+		);
+
+		NotificationDispatchCommand command = new NotificationDispatchCommand(
+			user.getId(),
+			experience.getId(),
+			"D3",
+			"연남 카페 리뷰 마감 3일 전입니다",
+			"마감일 전에 리뷰를 작성하여 제출해주세요"
+		);
+
+		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isZero();
+		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
+			List.of(experience.getId()),
+			List.of("D3")
+		)).isEmpty();
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).isEmpty();
+
+		updateNotificationSettingsUseCase.execute(
+			user.getId(),
+			List.of(new NotificationRuleSetting(NotificationRuleKey.D3, true))
+		);
+
+		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(1);
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
+	}
+
+	@Test
+	void keepsSendingRulesThatAreStillOn() {
+		User user = userRepository.save(User.create("notify-mixed@test.com", "notify-mixed"));
+		Platform platform = platformRepository.save(Platform.create(user.getId(), "인스타", "#444444", 0));
+		Experience experience = experienceRepository.save(Experience.create(
+			user.getId(),
+			"압구정 식당",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 29),
+			null,
+			List.of(ExperiencePlatform.of(platform.getId(), true))
+		));
+		deviceTokenRepository.save(DeviceToken.create(user.getId(), "notify-mixed-token", DevicePlatform.ANDROID));
+
+		updateNotificationSettingsUseCase.execute(
+			user.getId(),
+			List.of(new NotificationRuleSetting(NotificationRuleKey.D3, false))
+		);
+
+		int sent = sendPushNotificationUseCase.execute(List.of(
+			new NotificationDispatchCommand(
+				user.getId(),
+				experience.getId(),
+				"D3",
+				"압구정 식당 리뷰 마감 3일 전입니다",
+				"마감일 전에 리뷰를 작성하여 제출해주세요"
+			),
+			new NotificationDispatchCommand(
+				user.getId(),
+				experience.getId(),
+				"TODAY",
+				"압구정 식당 오늘 체험 일정이 있어요",
+				"오늘 체험할 일정을 확인해보세요"
+			)
+		));
+
+		assertThat(sent).isEqualTo(1);
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId()))
+			.extracting(Notification::getRuleKey)
+			.containsExactly("TODAY");
 	}
 
 	@Test
