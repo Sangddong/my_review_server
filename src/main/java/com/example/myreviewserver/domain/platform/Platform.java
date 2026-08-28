@@ -16,6 +16,7 @@ public class Platform {
 	private String color;
 	private int sortOrder;
 	private Integer isDeleted;
+	private Instant deletedAt;
 	private final Instant createdAt;
 	private final Instant updatedAt;
 
@@ -26,6 +27,7 @@ public class Platform {
 		String color,
 		int sortOrder,
 		Integer isDeleted,
+		Instant deletedAt,
 		Instant createdAt,
 		Instant updatedAt
 	) {
@@ -35,6 +37,7 @@ public class Platform {
 		this.color = color;
 		this.sortOrder = sortOrder;
 		this.isDeleted = isDeleted;
+		this.deletedAt = deletedAt;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
@@ -44,7 +47,17 @@ public class Platform {
 		if (sortOrder < 0) {
 			throw new DomainException("sortOrder must be >= 0");
 		}
-		return new Platform(null, userId, validatedName(name), validatedColor(color), sortOrder, null, null, null);
+		return new Platform(
+			null,
+			userId,
+			validatedName(name),
+			validatedColor(color),
+			sortOrder,
+			null,
+			null,
+			null,
+			null
+		);
 	}
 
 	public static String validatedName(String name) {
@@ -63,10 +76,11 @@ public class Platform {
 		String color,
 		int sortOrder,
 		Integer isDeleted,
+		Instant deletedAt,
 		Instant createdAt,
 		Instant updatedAt
 	) {
-		return new Platform(id, userId, name, color, sortOrder, isDeleted, createdAt, updatedAt);
+		return new Platform(id, userId, name, color, sortOrder, isDeleted, deletedAt, createdAt, updatedAt);
 	}
 
 	public static String requireName(String name) {
@@ -96,9 +110,13 @@ public class Platform {
 		this.sortOrder = sortOrder;
 	}
 
-	public void softDelete() {
+	public void softDelete(Instant deletedAt) {
 		ensureActive();
+		if (deletedAt == null) {
+			throw new DomainException("deletedAt is required");
+		}
 		this.isDeleted = 1;
+		this.deletedAt = deletedAt;
 	}
 
 	public boolean isActive() {
@@ -127,6 +145,10 @@ public class Platform {
 
 	public Integer getIsDeleted() {
 		return isDeleted;
+	}
+
+	public Instant getDeletedAt() {
+		return deletedAt;
 	}
 
 	public Instant getCreatedAt() {

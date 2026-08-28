@@ -1,5 +1,6 @@
 package com.example.myreviewserver.domain.platform;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,9 +35,16 @@ public interface PlatformRepository {
 	Optional<Platform> updateActiveByIdAndUserId(Long id, Long userId, String name, String color);
 
 	/**
-	 * Soft-deletes an active platform. Returns false when no active row matched.
+	 * Soft-deletes an active platform, stamping deletedAt for retention purge.
+	 * Returns false when no active row matched.
 	 */
-	boolean softDeleteActiveByIdAndUserId(Long id, Long userId);
+	boolean softDeleteActiveByIdAndUserId(Long id, Long userId, Instant deletedAt);
+
+	/**
+	 * Hard-deletes platforms soft-deleted before the cutoff.
+	 * Platforms still linked to an experience are kept. Returns the deleted row count.
+	 */
+	int deleteAllDeletedBefore(Instant cutoff);
 
 	/**
 	 * Sets sortOrder of active platforms in one UPDATE (CASE WHEN).

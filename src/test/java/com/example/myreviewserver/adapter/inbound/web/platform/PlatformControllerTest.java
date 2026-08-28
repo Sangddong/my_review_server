@@ -14,6 +14,7 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,7 +48,7 @@ class PlatformControllerTest {
 
 		platformRepository.save(Platform.create(user.getId(), "블로그", "#c6f8c8", 0));
 		Platform hidden = platformRepository.save(Platform.create(user.getId(), "숨김", "#dddddd", 1));
-		hidden.softDelete();
+		hidden.softDelete(Instant.now());
 		platformRepository.save(hidden);
 
 		mockMvc.perform(get("/api/platforms"))
@@ -121,7 +122,7 @@ class PlatformControllerTest {
 				.content("{}"))
 			.andExpect(status().isBadRequest());
 
-		platform.softDelete();
+		platform.softDelete(Instant.now());
 		platformRepository.save(platform);
 
 		mockMvc.perform(patch("/api/platforms/" + platform.getId())

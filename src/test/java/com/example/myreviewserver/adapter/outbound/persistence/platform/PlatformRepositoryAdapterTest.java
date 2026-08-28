@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +39,10 @@ class PlatformRepositoryAdapterTest {
 		assertThat(created.getId()).isNotNull();
 		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L)).hasSize(1);
 
-		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L)).isTrue();
-		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L)).isFalse();
+		Instant deletedAt = Instant.now();
+		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L, deletedAt)).isTrue();
+		assertThat(platformRepository.softDeleteActiveByIdAndUserId(created.getId(), 1L, deletedAt)).isFalse();
+		assertThat(platformRepository.findById(created.getId()).orElseThrow().getDeletedAt()).isNotNull();
 
 		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(1L)).isEmpty();
 		assertThat(platformRepository.findActiveByIdAndUserId(created.getId(), 1L)).isEmpty();
