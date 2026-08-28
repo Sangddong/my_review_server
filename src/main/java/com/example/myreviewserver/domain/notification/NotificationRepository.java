@@ -20,5 +20,5 @@ public interface NotificationRepository {
 
 	long countUnreadByUserId(Long userId);
 
-	void deleteByIdAndUserId(Long id, Long userId);
+	boolean deleteByIdAndUserId(Long id, Long userId);
 }

@@ -87,7 +87,7 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 	}
 
 	@Override
-	public void deleteByIdAndUserId(Long id, Long userId) {
-		springDataNotificationRepository.deleteByIdAndUserId(id, userId);
+	public boolean deleteByIdAndUserId(Long id, Long userId) {
+		return springDataNotificationRepository.deleteByIdAndUserId(id, userId) > 0;
 	}
 }

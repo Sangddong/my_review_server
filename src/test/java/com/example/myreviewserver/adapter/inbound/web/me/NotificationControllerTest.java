@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.inbound.web.me;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -200,5 +201,46 @@ class NotificationControllerTest {
 		mockMvc.perform(patch("/api/me/notifications/read-all")
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 			.andExpect(status().isOk());
+	}
+
+	@Test
+	void deleteRequiresAuthAndRemovesOwnNotification() throws Exception {
+		User user = userRepository.save(User.create("notify-delete-api@test.com", "notifydeleteapi"));
+		User other = userRepository.save(User.create("notify-delete-other@test.com", "notifydeleteother"));
+		String token = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
+		String otherToken = jwtTokenProvider.createAccessToken(other.getId(), other.getNickname());
+		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#555555", 0));
+		Experience experience = experienceRepository.save(Experience.create(
+			user.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(platform.getId(), true))
+		));
+		Notification notification = notificationRepository.save(Notification.create(
+			user.getId(),
+			experience.getId(),
+			"D3",
+			"성수 카페 리뷰 마감 3일 전입니다",
+			"마감일 전에 리뷰를 작성하여 제출해주세요"
+		));
+		String path = "/api/me/notifications/" + notification.getId();
+
+		mockMvc.perform(delete(path))
+			.andExpect(status().isForbidden());
+
+		mockMvc.perform(delete(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherToken))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false));
+
+		mockMvc.perform(delete(path)
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+			.andExpect(status().isNoContent());
+
+		assertThat(notificationRepository.findByIdAndUserId(notification.getId(), user.getId())).isEmpty();
 	}
 }
