@@ -228,13 +228,14 @@ public class ExperienceController {
 		)));
 	}
 
-	/** DELETE /api/experiences/{id} */
-	@DeleteMapping("/{id}")
+	/** DELETE /api/experiences */
+	@DeleteMapping
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(
 		summary = "체험 삭제",
 		description = """
 			로그인한 사용자 본인 소유의 체험을 hard delete합니다.
+			idList로 단건·다건 삭제가 가능합니다.
 			연결된 experience_platforms와 등록 완료 행도 함께 삭제됩니다.
 			없거나 다른 사용자 소유이면 Experience not found로 실패합니다.
 			"""
@@ -244,9 +245,9 @@ public class ExperienceController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "없거나 권한 없음"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
 	})
-	public void delete(@PathVariable Long id) {
+	public void delete(@RequestBody ExperienceDeleteRequest request) {
 		Long userId = CurrentUser.requireUserId();
-		deleteExperienceUseCase.delete(userId, id);
+		deleteExperienceUseCase.delete(userId, request.idList());
 	}
 
 	/** PUT /api/experiences/{id}/platforms/{platformId}/registration */

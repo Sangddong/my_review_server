@@ -26,7 +26,7 @@ public interface ExperienceRepository {
 
 	List<Experience> findCompletedByUserIdOrderByReservationAscIdAsc(Long userId);
 
-	boolean deleteByIdAndUserId(Long id, Long userId);
+	int deleteByUserIdAndIdIn(Long userId, List<Long> idList);
 
 	void deleteAllByUserIdIn(List<Long> userIdList);
 }

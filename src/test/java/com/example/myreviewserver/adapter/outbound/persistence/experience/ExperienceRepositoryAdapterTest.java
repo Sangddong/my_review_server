@@ -82,9 +82,9 @@ class ExperienceRepositoryAdapterTest {
 			.extracting(Experience::getId)
 			.containsExactly(later.getId());
 
-		assertThat(experienceRepository.deleteByIdAndUserId(updated.getId(), 1L)).isTrue();
+		assertThat(experienceRepository.deleteByUserIdAndIdIn(1L, List.of(updated.getId()))).isEqualTo(1);
 		assertThat(experienceRepository.findByIdAndUserId(updated.getId(), 1L)).isEmpty();
 		assertThat(experienceRepository.findCompletedByUserIdOrderByReservationAscIdAsc(1L)).isEmpty();
-		assertThat(experienceRepository.deleteByIdAndUserId(updated.getId(), 1L)).isFalse();
+		assertThat(experienceRepository.deleteByUserIdAndIdIn(1L, List.of(updated.getId()))).isZero();
 	}
 }
