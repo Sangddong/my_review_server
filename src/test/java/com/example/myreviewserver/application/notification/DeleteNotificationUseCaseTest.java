@@ -1,6 +1,7 @@
-package com.example.myreviewserver.adapter.outbound.persistence.notification;
+package com.example.myreviewserver.application.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.myreviewserver.domain.experience.Experience;
 import com.example.myreviewserver.domain.experience.ExperiencePlatform;
@@ -10,6 +11,7 @@ import com.example.myreviewserver.domain.notification.Notification;
 import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
+import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.LocalDate;
@@ -21,7 +23,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class NotificationRepositoryAdapterTest {
+class DeleteNotificationUseCaseTest {
+
+	@Autowired
+	DeleteNotificationUseCase deleteNotificationUseCase;
 
 	@Autowired
 	NotificationRepository notificationRepository;
@@ -36,9 +41,9 @@ class NotificationRepositoryAdapterTest {
 	ExperienceRepository experienceRepository;
 
 	@Test
-	void savesFindsMarksReadCountsAndDeletes() {
-		User user = userRepository.save(User.create("notify-inbox@test.com", "notify-inbox"));
-		User other = userRepository.save(User.create("notify-other@test.com", "notify-other"));
+	void softDeletesOwnNotificationsAndRejectsOthers() {
+		User user = userRepository.save(User.create("delete-notify@test.com", "deletenotify"));
+		User other = userRepository.save(User.create("delete-other@test.com", "deleteother"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience experience = experienceRepository.save(Experience.create(
 			user.getId(),
@@ -50,7 +55,6 @@ class NotificationRepositoryAdapterTest {
 			null,
 			List.of(ExperiencePlatform.of(platform.getId(), true))
 		));
-
 		Notification first = notificationRepository.save(Notification.create(
 			user.getId(),
 			experience.getId(),
@@ -66,23 +70,13 @@ class NotificationRepositoryAdapterTest {
 			"오늘 예약된 체험을 확인해보세요"
 		));
 
-		assertThat(first.getId()).isNotNull();
-		assertThat(first.getCreatedAt()).isNotNull();
-		assertThat(first.isRead()).isFalse();
-		assertThat(notificationRepository.countUnreadByUserId(user.getId())).isEqualTo(2);
-		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId()))
-			.extracting(Notification::getId)
-			.containsExactly(second.getId(), first.getId());
-		assertThat(notificationRepository.findByIdAndUserId(first.getId(), other.getId())).isEmpty();
+		deleteNotificationUseCase.execute(user.getId(), List.of(first.getId(), second.getId()));
 
-		first.markRead();
-		Notification read = notificationRepository.save(first);
-		assertThat(read.isRead()).isTrue();
-		assertThat(notificationRepository.countUnreadByUserId(user.getId())).isEqualTo(1);
-
-		notificationRepository.softDeleteByUserIdAndIdIn(user.getId(), List.of(second.getId()));
+		assertThat(notificationRepository.findByIdAndUserId(first.getId(), user.getId())).isEmpty();
 		assertThat(notificationRepository.findByIdAndUserId(second.getId(), user.getId())).isEmpty();
-		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
-		assertThat(notificationRepository.countUnreadByUserId(user.getId())).isZero();
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).isEmpty();
+		assertThatThrownBy(() -> deleteNotificationUseCase.execute(other.getId(), List.of(first.getId())))
+			.isInstanceOf(DomainException.class)
+			.hasMessageContaining("Notification not found");
 	}
 }
