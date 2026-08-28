@@ -80,8 +80,9 @@ class NotificationRepositoryAdapterTest {
 		assertThat(read.isRead()).isTrue();
 		assertThat(notificationRepository.countUnreadByUserId(user.getId())).isEqualTo(1);
 
-		notificationRepository.deleteByIdAndUserId(second.getId(), user.getId());
+		notificationRepository.softDeleteByUserIdAndIdIn(user.getId(), List.of(second.getId()));
 		assertThat(notificationRepository.findByIdAndUserId(second.getId(), user.getId())).isEmpty();
 		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
+		assertThat(notificationRepository.countUnreadByUserId(user.getId())).isZero();
 	}
 }

@@ -7,6 +7,7 @@ import java.util.Objects;
 /**
  * User-facing notification inbox item (app 알림 탭).
  * is_read: null = unread, 1 = read.
+ * is_deleted: null = active, 1 = soft-deleted.
  */
 public class Notification {
 
@@ -21,6 +22,8 @@ public class Notification {
 	private final String title;
 	private final String body;
 	private Integer isRead;
+	private Integer isDeleted;
+	private Instant deletedAt;
 	private final Instant createdAt;
 
 	private Notification(
@@ -31,6 +34,8 @@ public class Notification {
 		String title,
 		String body,
 		Integer isRead,
+		Integer isDeleted,
+		Instant deletedAt,
 		Instant createdAt
 	) {
 		this.id = id;
@@ -40,6 +45,8 @@ public class Notification {
 		this.title = title;
 		this.body = body;
 		this.isRead = isRead;
+		this.isDeleted = isDeleted;
+		this.deletedAt = deletedAt;
 		this.createdAt = createdAt;
 	}
 
@@ -64,6 +71,8 @@ public class Notification {
 			validatedTitle(title),
 			validatedBody(body),
 			null,
+			null,
+			null,
 			null
 		);
 	}
@@ -76,17 +85,42 @@ public class Notification {
 		String title,
 		String body,
 		Integer isRead,
+		Integer isDeleted,
+		Instant deletedAt,
 		Instant createdAt
 	) {
-		return new Notification(id, userId, experienceId, ruleKey, title, body, isRead, createdAt);
+		return new Notification(
+			id,
+			userId,
+			experienceId,
+			ruleKey,
+			title,
+			body,
+			isRead,
+			isDeleted,
+			deletedAt,
+			createdAt
+		);
 	}
 
 	public void markRead() {
 		this.isRead = 1;
 	}
 
+	public void softDelete(Instant deletedAt) {
+		if (deletedAt == null) {
+			throw new DomainException("deletedAt is required");
+		}
+		this.isDeleted = 1;
+		this.deletedAt = deletedAt;
+	}
+
 	public boolean isRead() {
 		return isRead != null;
+	}
+
+	public boolean isDeleted() {
+		return isDeleted != null;
 	}
 
 	public Long getId() {
@@ -115,6 +149,14 @@ public class Notification {
 
 	public Integer getIsRead() {
 		return isRead;
+	}
+
+	public Integer getIsDeleted() {
+		return isDeleted;
+	}
+
+	public Instant getDeletedAt() {
+		return deletedAt;
 	}
 
 	public Instant getCreatedAt() {

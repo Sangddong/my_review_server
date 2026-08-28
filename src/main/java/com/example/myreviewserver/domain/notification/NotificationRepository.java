@@ -1,5 +1,6 @@
 package com.example.myreviewserver.domain.notification;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,5 +21,7 @@ public interface NotificationRepository {
 
 	long countUnreadByUserId(Long userId);
 
-	boolean deleteByIdAndUserId(Long id, Long userId);
+	int softDeleteByUserIdAndIdIn(Long userId, List<Long> idList);
+
+	int deleteAllDeletedBefore(Instant cutoff);
 }

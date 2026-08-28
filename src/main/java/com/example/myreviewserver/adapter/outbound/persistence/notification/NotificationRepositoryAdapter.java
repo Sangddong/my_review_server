@@ -4,6 +4,7 @@ import com.example.myreviewserver.domain.notification.Notification;
 import com.example.myreviewserver.domain.notification.NotificationRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +39,8 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 			entity = NotificationPersistenceMapper.toNewEntity(notification);
 		}
 		else {
-			entity = springDataNotificationRepository.findByIdAndUserId(notification.getId(), notification.getUserId())
+			entity = springDataNotificationRepository
+				.findActiveByIdAndUserId(notification.getId(), notification.getUserId())
 				.orElseThrow(() -> new DomainException("Notification not found"));
 			NotificationPersistenceMapper.copyToEntity(notification, entity);
 		}
@@ -63,14 +65,14 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 	@Override
 	@Transactional(readOnly = true)
 	public Optional<Notification> findByIdAndUserId(Long id, Long userId) {
-		return springDataNotificationRepository.findByIdAndUserId(id, userId)
+		return springDataNotificationRepository.findActiveByIdAndUserId(id, userId)
 			.map(NotificationPersistenceMapper::toDomain);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<Notification> findByUserIdOrderByCreatedAtDescIdDesc(Long userId) {
-		return springDataNotificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(userId).stream()
+		return springDataNotificationRepository.findActiveByUserIdOrderByCreatedAtDescIdDesc(userId).stream()
 			.map(NotificationPersistenceMapper::toDomain)
 			.toList();
 	}
@@ -83,11 +85,16 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 	@Override
 	@Transactional(readOnly = true)
 	public long countUnreadByUserId(Long userId) {
-		return springDataNotificationRepository.countByUserIdAndIsReadIsNull(userId);
+		return springDataNotificationRepository.countUnreadByUserId(userId);
 	}
 
 	@Override
-	public boolean deleteByIdAndUserId(Long id, Long userId) {
-		return springDataNotificationRepository.deleteByIdAndUserId(id, userId) > 0;
+	public int softDeleteByUserIdAndIdIn(Long userId, List<Long> idList) {
+		return springDataNotificationRepository.softDeleteByUserIdAndIdIn(userId, idList, Instant.now());
+	}
+
+	@Override
+	public int deleteAllDeletedBefore(Instant cutoff) {
+		return springDataNotificationRepository.deleteAllDeletedBefore(cutoff);
 	}
 }

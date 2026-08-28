@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -109,18 +110,18 @@ public class NotificationController {
 		return ApiResponse.ok(null);
 	}
 
-	/** DELETE /api/me/notifications/{id} */
-	@DeleteMapping("/{id}")
+	/** DELETE /api/me/notifications */
+	@DeleteMapping
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@Operation(summary = "알림 삭제", description = "본인 알림 하나를 hard delete합니다.")
+	@Operation(summary = "알림 삭제", description = "본인 알림을 soft delete합니다. idList로 단건·다건 삭제가 가능합니다.")
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "없거나 본인 알림이 아님"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
 	})
-	public void delete(@PathVariable Long id) {
+	public void delete(@RequestBody NotificationDeleteRequest request) {
 		Long userId = CurrentUser.requireUserId();
-		deleteNotificationUseCase.execute(userId, id);
+		deleteNotificationUseCase.execute(userId, request.idList());
 	}
 
 	@Schema(name = "NotificationListApiResponse")

@@ -9,10 +9,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @Configuration: Spring 설정 클래스.
  * @EnableScheduling: @Scheduled 메서드를 주기 실행.
- * @EnableConfigurationProperties: UserPurgeProperties, NotificationProperties를 빈으로 활성화.
+ * @EnableConfigurationProperties: UserPurgeProperties, NotificationProperties, NotificationPurgeProperties를 빈으로 활성화.
  */
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties({UserPurgeProperties.class, NotificationProperties.class})
+@EnableConfigurationProperties({UserPurgeProperties.class, NotificationProperties.class, NotificationPurgeProperties.class})
 public class SchedulingConfig {
 }

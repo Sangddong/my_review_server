@@ -40,6 +40,12 @@ public class NotificationJpaEntity {
 	@Column(name = "is_read")
 	private Integer isRead;
 
+	@Column(name = "is_deleted")
+	private Integer isDeleted;
+
+	@Column(name = "deleted_at")
+	private Instant deletedAt;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -100,6 +106,22 @@ public class NotificationJpaEntity {
 
 	public void setIsRead(Integer isRead) {
 		this.isRead = isRead;
+	}
+
+	public Integer getIsDeleted() {
+		return isDeleted;
+	}
+
+	public void setIsDeleted(Integer isDeleted) {
+		this.isDeleted = isDeleted;
+	}
+
+	public Instant getDeletedAt() {
+		return deletedAt;
+	}
+
+	public void setDeletedAt(Instant deletedAt) {
+		this.deletedAt = deletedAt;
 	}
 
 	public Instant getCreatedAt() {

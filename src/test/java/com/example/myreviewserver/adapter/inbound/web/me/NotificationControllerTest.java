@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -204,7 +205,7 @@ class NotificationControllerTest {
 	}
 
 	@Test
-	void deleteRequiresAuthAndRemovesOwnNotification() throws Exception {
+	void deleteRequiresAuthAndSoftDeletesOwnNotifications() throws Exception {
 		User user = userRepository.save(User.create("notify-delete-api@test.com", "notifydeleteapi"));
 		User other = userRepository.save(User.create("notify-delete-other@test.com", "notifydeleteother"));
 		String token = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
@@ -227,18 +228,27 @@ class NotificationControllerTest {
 			"성수 카페 리뷰 마감 3일 전입니다",
 			"마감일 전에 리뷰를 작성하여 제출해주세요"
 		));
-		String path = "/api/me/notifications/" + notification.getId();
+		String path = "/api/me/notifications";
+		String body = """
+			{"idList":[%d]}
+			""".formatted(notification.getId());
 
-		mockMvc.perform(delete(path))
+		mockMvc.perform(delete(path)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isForbidden());
 
 		mockMvc.perform(delete(path)
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherToken))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + otherToken)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.success").value(false));
 
 		mockMvc.perform(delete(path)
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(body))
 			.andExpect(status().isNoContent());
 
 		assertThat(notificationRepository.findByIdAndUserId(notification.getId(), user.getId())).isEmpty();

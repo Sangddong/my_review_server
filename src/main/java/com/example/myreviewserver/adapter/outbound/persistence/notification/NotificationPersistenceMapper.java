@@ -22,6 +22,8 @@ final class NotificationPersistenceMapper {
 		entity.setTitle(domain.getTitle());
 		entity.setBody(domain.getBody());
 		entity.setIsRead(domain.getIsRead());
+		entity.setIsDeleted(domain.getIsDeleted());
+		entity.setDeletedAt(domain.getDeletedAt());
 	}
 
 	static Notification toDomain(NotificationJpaEntity entity) {
@@ -33,6 +35,8 @@ final class NotificationPersistenceMapper {
 			entity.getTitle(),
 			entity.getBody(),
 			entity.getIsRead(),
+			entity.getIsDeleted(),
+			entity.getDeletedAt(),
 			entity.getCreatedAt()
 		);
 	}
