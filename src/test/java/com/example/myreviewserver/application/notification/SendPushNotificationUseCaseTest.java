@@ -20,12 +20,16 @@ import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class SendPushNotificationUseCaseTest {
 
 	@Autowired
@@ -50,7 +54,7 @@ class SendPushNotificationUseCaseTest {
 	NotificationRepository notificationRepository;
 
 	@Test
-	void recordsSendAndInboxAndSkipsDuplicateRuleForSameExperience() {
+	void recordsSendAndInboxAndSkipsDuplicateRuleForSameExperience(CapturedOutput output) {
 		User user = userRepository.save(User.create("notify-send@test.com", "notify-send"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience experience = experienceRepository.save(Experience.create(
@@ -90,6 +94,9 @@ class SendPushNotificationUseCaseTest {
 		assertThat(inbox.get(0).getTitle()).isEqualTo("성수 카페 리뷰 마감 3일 전입니다");
 		assertThat(inbox.get(0).getBody()).isEqualTo("마감일 전에 리뷰를 작성하여 제출해주세요");
 		assertThat(inbox.get(0).isRead()).isFalse();
+		assertThat(output.getOut()).contains("ruleKey=D3");
+		assertThat(output.getOut()).contains("experienceId=" + experience.getId());
+		assertThat(output.getOut()).contains("screen=experience_detail");
 
 		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(0);
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(

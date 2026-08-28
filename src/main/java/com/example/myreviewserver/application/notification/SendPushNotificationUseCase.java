@@ -120,7 +120,16 @@ public class SendPushNotificationUseCase {
 				title,
 				body
 			));
-			deliveries.add(new PendingDelivery(userTokens, new PushMessage(title, body)));
+			deliveries.add(new PendingDelivery(
+				userTokens,
+				new PushMessage(
+					title,
+					body,
+					command.ruleKey().trim(),
+					command.experienceId(),
+					PushMessage.DEFAULT_SCREEN
+				)
+			));
 		}
 		if (sendRecords.isEmpty()) {
 			return 0;

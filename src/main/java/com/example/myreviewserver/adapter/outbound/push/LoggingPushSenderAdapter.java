@@ -19,10 +19,11 @@ public class LoggingPushSenderAdapter implements PushSender {
 	@Override
 	public void send(String token, PushMessage message) {
 		log.info(
-			"Push stub: token={} title={} body={}",
+			"Push stub: token={} title={} body={} data={}",
 			token,
 			message == null ? null : message.title(),
-			message == null ? null : message.body()
+			message == null ? null : message.body(),
+			message == null ? null : message.data()
 		);
 	}
 }
