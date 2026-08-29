@@ -21,8 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Sends pushes for notification rules, records duplicate-prevention rows,
- * and saves user inbox notifications.
+ * Records user inbox notifications and duplicate-prevention rows for notification rules,
+ * then pushes to the user's devices.
+ * The inbox is independent of push delivery: a user with no device token still gets the
+ * notification in their inbox.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션.
@@ -122,18 +124,12 @@ public class SendPushNotificationUseCase {
 		List<Notification> inboxRecords = new ArrayList<>();
 		List<PendingDelivery> deliveries = new ArrayList<>();
 		for (NotificationDispatchCommand command : pending) {
-			List<String> userTokens = tokensByUserId.getOrDefault(command.userId(), List.of());
-			if (userTokens.isEmpty()) {
-				log.info(
-					"Skip push: no device tokens userId={} experienceId={} ruleKey={}",
-					command.userId(),
-					command.experienceId(),
-					command.ruleKey()
-				);
-				continue;
-			}
 			String title = command.title().trim();
 			String body = command.body().trim();
+			// The notification happened regardless of whether a push can be delivered, so the
+			// inbox row and the duplicate-prevention row are always written. Skipping them for
+			// tokenless users would hide the notification forever and would let it be recreated
+			// as a duplicate once a token shows up.
 			sendRecords.add(NotificationSend.create(command.userId(), command.experienceId(), command.ruleKey()));
 			inboxRecords.add(Notification.create(
 				command.userId(),
@@ -142,6 +138,17 @@ public class SendPushNotificationUseCase {
 				title,
 				body
 			));
+
+			List<String> userTokens = tokensByUserId.getOrDefault(command.userId(), List.of());
+			if (userTokens.isEmpty()) {
+				log.info(
+					"Inbox only, no push: no device tokens userId={} experienceId={} ruleKey={}",
+					command.userId(),
+					command.experienceId(),
+					command.ruleKey()
+				);
+				continue;
+			}
 			deliveries.add(new PendingDelivery(
 				userTokens,
 				new PushMessage(
@@ -153,17 +160,24 @@ public class SendPushNotificationUseCase {
 				)
 			));
 		}
-		if (sendRecords.isEmpty()) {
-			return 0;
-		}
 		notificationSendRepository.saveAll(sendRecords);
 		notificationRepository.saveAll(inboxRecords);
 		for (PendingDelivery delivery : deliveries) {
 			for (String token : delivery.tokens()) {
-				pushSender.send(token, delivery.message());
+				// A failing device must not roll back the rows above, nor stop the other devices.
+				try {
+					pushSender.send(token, delivery.message());
+				}
+				catch (RuntimeException ex) {
+					log.warn("Push delivery failed for token={}", token, ex);
+				}
 			}
 		}
-		log.info("Recorded {} notification sends and inbox rows", sendRecords.size());
+		log.info(
+			"Recorded {} notification sends and inbox rows, pushed {} of them",
+			sendRecords.size(),
+			deliveries.size()
+		);
 		return sendRecords.size();
 	}
 
