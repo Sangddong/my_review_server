@@ -2,9 +2,7 @@ package com.example.myreviewserver.application.notification;
 
 import com.example.myreviewserver.domain.experience.Experience;
 import com.example.myreviewserver.domain.experience.ExperienceRepository;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -36,9 +34,7 @@ public class TodayReservationJobRunner implements NotificationJobRunner {
 	}
 
 	@Override
-	public void run(Instant now) {
-		LocalDate today = now.atZone(ZoneOffset.UTC).toLocalDate();
-
+	public void run(LocalDate today) {
 		List<Experience> experiences = experienceRepository.findByReservationDate(today);
 		log.info("TODAY rule: found {} experiences with reservationDate={}", experiences.size(), today);
 

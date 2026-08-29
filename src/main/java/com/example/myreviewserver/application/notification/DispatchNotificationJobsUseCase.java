@@ -1,6 +1,7 @@
 package com.example.myreviewserver.application.notification;
 
-import java.time.Instant;
+import com.example.myreviewserver.domain.shared.DomainException;
+import java.time.LocalDate;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +23,13 @@ public class DispatchNotificationJobsUseCase {
 		this.runners = runners;
 	}
 
-	public int execute(Instant now) {
-		Instant runAt = now != null ? now : Instant.now();
-		log.info("Dispatching {} notification job runners at {}", runners.size(), runAt);
+	public int execute(LocalDate today) {
+		if (today == null) {
+			throw new DomainException("today is required");
+		}
+		log.info("Dispatching {} notification job runners for {}", runners.size(), today);
 		for (NotificationJobRunner runner : runners) {
-			runner.run(runAt);
+			runner.run(today);
 		}
 		return runners.size();
 	}

@@ -16,9 +16,8 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +31,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @ExtendWith(OutputCaptureExtension.class)
 class OverdueReviewDeadlineJobRunnerTest {
+
+	private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
 	@Autowired
 	OverdueReviewDeadlineJobRunner overdueReviewDeadlineJobRunner;
@@ -56,9 +57,8 @@ class OverdueReviewDeadlineJobRunnerTest {
 
 	@Test
 	void sendsOverduePushAndRecordsForUnsubmittedExperiencePastDeadline(CapturedOutput output) {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
+		LocalDate today = LocalDate.now(SEOUL);
 		LocalDate deadline = today.minusDays(1);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
 
 		User user = userRepository.save(User.create("overdue-runner@test.com", "overduerunner"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
@@ -74,7 +74,7 @@ class OverdueReviewDeadlineJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "overdue-token-a", DevicePlatform.IOS));
 
-		overdueReviewDeadlineJobRunner.run(now);
+		overdueReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
@@ -93,8 +93,7 @@ class OverdueReviewDeadlineJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenDeadlineIsTodayOrLater() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
+		LocalDate today = LocalDate.now(SEOUL);
 
 		User user = userRepository.save(User.create("overdue-future@test.com", "overduefuture"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "인스타", "#222222", 0));
@@ -120,7 +119,7 @@ class OverdueReviewDeadlineJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "overdue-future-token", DevicePlatform.ANDROID));
 
-		overdueReviewDeadlineJobRunner.run(now);
+		overdueReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(todayDeadline.getId(), futureDeadline.getId()),
@@ -130,9 +129,8 @@ class OverdueReviewDeadlineJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenExperienceAlreadySubmitted() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
+		LocalDate today = LocalDate.now(SEOUL);
 		LocalDate deadline = today.minusDays(2);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
 
 		User user = userRepository.save(User.create("overdue-submitted@test.com", "overduesubmitted"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "유튜브", "#333333", 0));
@@ -150,7 +148,7 @@ class OverdueReviewDeadlineJobRunnerTest {
 		experienceRepository.save(experience);
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "overdue-submitted-token", DevicePlatform.IOS));
 
-		overdueReviewDeadlineJobRunner.run(now);
+		overdueReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),

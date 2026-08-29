@@ -14,9 +14,8 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +29,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @ExtendWith(OutputCaptureExtension.class)
 class D3ReviewDeadlineJobRunnerTest {
+
+	private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
 	@Autowired
 	D3ReviewDeadlineJobRunner d3ReviewDeadlineJobRunner;
@@ -51,9 +52,8 @@ class D3ReviewDeadlineJobRunnerTest {
 
 	@Test
 	void sendsD3PushAndRecordsForUnsubmittedExperienceDue3DaysLater(CapturedOutput output) {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
+		LocalDate today = LocalDate.now(SEOUL);
 		LocalDate deadline = today.plusDays(3);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
 
 		User user = userRepository.save(User.create("d3-runner@test.com", "d3runner"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
@@ -69,7 +69,7 @@ class D3ReviewDeadlineJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "d3-token-a", DevicePlatform.IOS));
 
-		d3ReviewDeadlineJobRunner.run(now);
+		d3ReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
@@ -81,8 +81,7 @@ class D3ReviewDeadlineJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenDeadlineIsNot3DaysAway() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
+		LocalDate today = LocalDate.now(SEOUL);
 
 		User user = userRepository.save(User.create("d3-wrong@test.com", "d3wrong"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "인스타", "#222222", 0));
@@ -98,7 +97,7 @@ class D3ReviewDeadlineJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "d3-wrong-token", DevicePlatform.ANDROID));
 
-		d3ReviewDeadlineJobRunner.run(now);
+		d3ReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experienceRepository
@@ -110,9 +109,8 @@ class D3ReviewDeadlineJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenExperienceAlreadySubmitted() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
+		LocalDate today = LocalDate.now(SEOUL);
 		LocalDate deadline = today.plusDays(3);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
 
 		User user = userRepository.save(User.create("d3-submitted@test.com", "d3submitted"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "유튜브", "#333333", 0));
@@ -130,7 +128,7 @@ class D3ReviewDeadlineJobRunnerTest {
 		experienceRepository.save(experience);
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "d3-submitted-token", DevicePlatform.IOS));
 
-		d3ReviewDeadlineJobRunner.run(now);
+		d3ReviewDeadlineJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
