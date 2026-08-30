@@ -3,8 +3,7 @@ package com.example.myreviewserver.adapter.inbound.scheduler;
 import com.example.myreviewserver.application.platform.PurgeDeletedPlatformsUseCase;
 import com.example.myreviewserver.config.PlatformPurgeProperties;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +13,7 @@ import org.springframework.stereotype.Component;
  * Periodically hard-deletes soft-deleted platforms past the retention window.
  *
  * @Component: Spring 빈.
- * @Scheduled: cron 주기에 맞춰 메서드를 실행.
+ * @Scheduled: cron 주기에 맞춰 메서드를 실행. zone으로 cron 기준 타임존을 지정.
  */
 @Component
 public class PurgeDeletedPlatformsScheduler {
@@ -32,7 +31,7 @@ public class PurgeDeletedPlatformsScheduler {
 		this.platformPurgeProperties = platformPurgeProperties;
 	}
 
-	@Scheduled(cron = "${app.platform.purge.cron}")
+	@Scheduled(cron = "${app.platform.purge.cron}", zone = "${app.platform.purge.zone}")
 	public void purge() {
 		int afterMonths = platformPurgeProperties.getAfterMonths();
 		if (afterMonths < 1) {
@@ -42,7 +41,9 @@ public class PurgeDeletedPlatformsScheduler {
 			);
 			return;
 		}
-		Instant cutoff = OffsetDateTime.now(ZoneOffset.UTC).minusMonths(afterMonths).toInstant();
+		Instant cutoff = ZonedDateTime.now(platformPurgeProperties.getZoneId())
+			.minusMonths(afterMonths)
+			.toInstant();
 		int deleted = purgeDeletedPlatformsUseCase.execute(cutoff);
 		log.info("Platform purge job finished: deleted={}, cutoff={}", deleted, cutoff);
 	}
