@@ -1,11 +1,13 @@
 package com.example.myreviewserver.application.notification;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 /**
- * Hook for a concrete notification rule. Follow-up issues register implementations.
+ * Hook for a concrete notification rule.
+ * The caller resolves "today" in the configured zone so every rule compares against
+ * the same calendar day that the cron fired on.
  */
 public interface NotificationJobRunner {
 
-	void run(Instant now);
+	void run(LocalDate today);
 }

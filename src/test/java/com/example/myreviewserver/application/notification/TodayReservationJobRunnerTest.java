@@ -14,10 +14,9 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +30,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @ExtendWith(OutputCaptureExtension.class)
 class TodayReservationJobRunnerTest {
+
+	private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
 
 	@Autowired
 	TodayReservationJobRunner todayReservationJobRunner;
@@ -52,8 +53,7 @@ class TodayReservationJobRunnerTest {
 
 	@Test
 	void sendsTodayPushAndRecordsForExperienceReservedToday(CapturedOutput output) {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
+		LocalDate today = LocalDate.now(SEOUL);
 
 		User user = userRepository.save(User.create("today-runner@test.com", "todayrunner"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
@@ -69,7 +69,7 @@ class TodayReservationJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "today-token-a", DevicePlatform.IOS));
 
-		todayReservationJobRunner.run(now);
+		todayReservationJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
@@ -81,8 +81,7 @@ class TodayReservationJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenReservationDateIsNotToday() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
+		LocalDate today = LocalDate.now(SEOUL);
 
 		User user = userRepository.save(User.create("today-wrong@test.com", "todaywrong"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "인스타", "#222222", 0));
@@ -98,7 +97,7 @@ class TodayReservationJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "today-wrong-token", DevicePlatform.ANDROID));
 
-		todayReservationJobRunner.run(now);
+		todayReservationJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
@@ -108,8 +107,7 @@ class TodayReservationJobRunnerTest {
 
 	@Test
 	void doesNotSendWhenReservationDateIsNull() {
-		LocalDate today = LocalDate.now(ZoneOffset.UTC);
-		Instant now = today.atStartOfDay(ZoneOffset.UTC).toInstant();
+		LocalDate today = LocalDate.now(SEOUL);
 
 		User user = userRepository.save(User.create("today-null@test.com", "todaynull"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "유튜브", "#333333", 0));
@@ -125,7 +123,7 @@ class TodayReservationJobRunnerTest {
 		));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "today-null-token", DevicePlatform.IOS));
 
-		todayReservationJobRunner.run(now);
+		todayReservationJobRunner.run(today);
 
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),

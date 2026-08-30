@@ -102,6 +102,10 @@ class SendPushNotificationUseCaseTest {
 		assertThat(output.getOut()).contains("experienceId=" + experience.getId());
 		assertThat(output.getOut()).contains("screen=experience_detail");
 
+		// 같은 계정으로 로그인한 모든 기기에 발송되어야 함
+		assertThat(output.getOut()).contains("token=notify-token-a");
+		assertThat(output.getOut()).contains("token=notify-token-b");
+
 		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(0);
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),

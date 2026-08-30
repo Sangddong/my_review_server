@@ -2,7 +2,10 @@ package com.example.myreviewserver.application.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Instant;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.example.myreviewserver.domain.shared.DomainException;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +21,13 @@ class DispatchNotificationJobsUseCaseTest {
 	@Test
 	void runsRegisteredJobRunners() {
 		// D3ReviewDeadlineJobRunner 이 등록되어 있으므로 runner 수 >= 1
-		assertThat(dispatchNotificationJobsUseCase.execute(Instant.parse("2026-08-18T00:00:00Z"))).isGreaterThanOrEqualTo(1);
+		assertThat(dispatchNotificationJobsUseCase.execute(LocalDate.of(2026, 8, 18))).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test
+	void rejectsNullDate() {
+		assertThatThrownBy(() -> dispatchNotificationJobsUseCase.execute(null))
+			.isInstanceOf(DomainException.class)
+			.hasMessageContaining("today is required");
 	}
 }
