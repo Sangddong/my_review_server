@@ -200,7 +200,7 @@ class SendPushNotificationUseCaseTest {
 	}
 
 	@Test
-	void skipsWhenUserHasNoDeviceTokens() {
+	void recordsInboxWithoutPushWhenUserHasNoDeviceTokens(CapturedOutput output) {
 		User user = userRepository.save(User.create("notify-notoken@test.com", "notify-notoken"));
 		Platform platform = platformRepository.save(Platform.create(user.getId(), "인스타", "#222222", 0));
 		Experience experience = experienceRepository.save(Experience.create(
@@ -214,21 +214,31 @@ class SendPushNotificationUseCaseTest {
 			List.of(ExperiencePlatform.of(platform.getId(), true))
 		));
 
-		int sent = sendPushNotificationUseCase.execute(List.of(
-			new NotificationDispatchCommand(
-				user.getId(),
-				experience.getId(),
-				"TODAY",
-				"한남 식당 오늘 체험 일정이 있어요",
-				"오늘 체험할 일정을 확인해보세요"
-			)
-		));
+		NotificationDispatchCommand command = new NotificationDispatchCommand(
+			user.getId(),
+			experience.getId(),
+			"TODAY",
+			"한남 식당 오늘 체험 일정이 있어요",
+			"오늘 체험할 일정을 확인해보세요"
+		);
 
-		assertThat(sent).isEqualTo(0);
+		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(1);
+
+		List<Notification> inbox = notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId());
+		assertThat(inbox).hasSize(1);
+		assertThat(inbox.get(0).getRuleKey()).isEqualTo("TODAY");
+		assertThat(inbox.get(0).getTitle()).isEqualTo("한남 식당 오늘 체험 일정이 있어요");
 		assertThat(notificationSendRepository.findByExperienceIdInAndRuleKeyIn(
 			List.of(experience.getId()),
 			List.of("TODAY")
-		)).isEmpty();
-		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).isEmpty();
+		)).hasSize(1);
+
+		// 토큰이 없으니 푸시 전송은 일어나지 않아야 함
+		assertThat(output.getOut()).contains("Inbox only, no push");
+		assertThat(output.getOut()).doesNotContain("Push stub");
+
+		// 이후 실행에서 알림함에 중복으로 쌓이지 않아야 함
+		assertThat(sendPushNotificationUseCase.execute(List.of(command))).isEqualTo(0);
+		assertThat(notificationRepository.findByUserIdOrderByCreatedAtDescIdDesc(user.getId())).hasSize(1);
 	}
 }
