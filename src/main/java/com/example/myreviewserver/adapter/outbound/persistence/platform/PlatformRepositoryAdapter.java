@@ -4,6 +4,7 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -104,8 +105,13 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 	}
 
 	@Override
-	public boolean softDeleteActiveByIdAndUserId(Long id, Long userId) {
-		return springDataPlatformRepository.softDeleteActiveByIdAndUserId(id, userId) > 0;
+	public boolean softDeleteActiveByIdAndUserId(Long id, Long userId, Instant deletedAt) {
+		return springDataPlatformRepository.softDeleteActiveByIdAndUserId(id, userId, deletedAt) > 0;
+	}
+
+	@Override
+	public int deleteAllDeletedBefore(Instant cutoff) {
+		return springDataPlatformRepository.deleteAllDeletedBefore(cutoff);
 	}
 
 	@Override

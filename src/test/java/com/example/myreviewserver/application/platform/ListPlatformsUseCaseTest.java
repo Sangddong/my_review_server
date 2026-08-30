@@ -6,6 +6,7 @@ import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ class ListPlatformsUseCaseTest {
 		Platform deleted = platformRepository.save(
 			Platform.create(owner.getId(), "숨김", "#dddddd", 2)
 		);
-		deleted.softDelete();
+		deleted.softDelete(Instant.now());
 		platformRepository.save(deleted);
 		platformRepository.save(Platform.create(other.getId(), "남의것", "#c6e4f8", 0));
 

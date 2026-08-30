@@ -15,6 +15,7 @@ final class PlatformPersistenceMapper {
 		entity.setColor(platform.getColor());
 		entity.setSortOrder(platform.getSortOrder());
 		entity.setIsDeleted(platform.getIsDeleted());
+		entity.setDeletedAt(platform.getDeletedAt());
 		return entity;
 	}
 
@@ -23,6 +24,7 @@ final class PlatformPersistenceMapper {
 		entity.setColor(platform.getColor());
 		entity.setSortOrder(platform.getSortOrder());
 		entity.setIsDeleted(platform.getIsDeleted());
+		entity.setDeletedAt(platform.getDeletedAt());
 	}
 
 	static Platform toDomain(PlatformJpaEntity entity) {
@@ -33,6 +35,7 @@ final class PlatformPersistenceMapper {
 			entity.getColor(),
 			entity.getSortOrder(),
 			entity.getIsDeleted(),
+			entity.getDeletedAt(),
 			entity.getCreatedAt(),
 			entity.getUpdatedAt()
 		);

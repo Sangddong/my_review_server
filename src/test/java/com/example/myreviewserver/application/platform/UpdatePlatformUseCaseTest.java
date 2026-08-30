@@ -8,6 +8,7 @@ import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,7 +67,7 @@ class UpdatePlatformUseCaseTest {
 			.isInstanceOf(DomainException.class)
 			.hasMessageContaining("not found");
 
-		youtube.softDelete();
+		youtube.softDelete(Instant.now());
 		platformRepository.save(youtube);
 
 		assertThatThrownBy(() -> updatePlatformUseCase.execute(user.getId(), youtube.getId(), "삭제됨수정", null))

@@ -2,6 +2,7 @@ package com.example.myreviewserver.application.platform;
 
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
+import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class DeletePlatformUseCase {
 			throw new DomainException("platformId is required");
 		}
 
-		boolean deleted = platformRepository.softDeleteActiveByIdAndUserId(platformId, userId);
+		boolean deleted = platformRepository.softDeleteActiveByIdAndUserId(platformId, userId, Instant.now());
 		if (!deleted) {
 			throw new DomainException("Platform not found");
 		}

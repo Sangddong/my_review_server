@@ -39,6 +39,9 @@ public class PlatformJpaEntity {
 	@Column(name = "is_deleted")
 	private Integer isDeleted;
 
+	@Column(name = "deleted_at")
+	private Instant deletedAt;
+
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private Instant createdAt;
 
@@ -94,6 +97,14 @@ public class PlatformJpaEntity {
 
 	public void setIsDeleted(Integer isDeleted) {
 		this.isDeleted = isDeleted;
+	}
+
+	public Instant getDeletedAt() {
+		return deletedAt;
+	}
+
+	public void setDeletedAt(Instant deletedAt) {
+		this.deletedAt = deletedAt;
 	}
 
 	public Instant getCreatedAt() {

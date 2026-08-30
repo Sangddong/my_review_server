@@ -46,6 +46,7 @@ class DeletePlatformUseCaseTest {
 		Platform deleted = platformRepository.findById(blog.getId()).orElseThrow();
 		assertThat(deleted.isActive()).isFalse();
 		assertThat(deleted.getIsDeleted()).isEqualTo(1);
+		assertThat(deleted.getDeletedAt()).isNotNull();
 		assertThat(listPlatformsUseCase.execute(user.getId()))
 			.extracting(Platform::getId)
 			.containsExactly(youtube.getId());
