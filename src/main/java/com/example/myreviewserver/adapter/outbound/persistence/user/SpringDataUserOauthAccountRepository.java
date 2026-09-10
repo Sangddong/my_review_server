@@ -20,5 +20,7 @@ public interface SpringDataUserOauthAccountRepository extends JpaRepository<User
 		@Param("providerUserId") String providerUserId
 	);
 
+	long deleteByUserId(Long userId);
+
 	long deleteByUserIdIn(List<Long> userIds);
 }
