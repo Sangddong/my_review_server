@@ -14,6 +14,11 @@ public interface UserRepository {
 
 	void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId);
 
+	/**
+	 * Unlinks all OAuth providers for the user so the same social account can register again.
+	 */
+	void deleteOauthAccountsByUserId(Long userId);
+
 	List<User> findDeletedBefore(Instant cutoff);
 
 	int deleteAllByIdIn(List<Long> userIdList);

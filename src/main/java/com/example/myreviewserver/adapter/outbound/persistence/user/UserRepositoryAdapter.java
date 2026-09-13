@@ -64,6 +64,14 @@ public class UserRepositoryAdapter implements UserRepository {
 	}
 
 	@Override
+	public void deleteOauthAccountsByUserId(Long userId) {
+		if (userId == null) {
+			return;
+		}
+		oauthAccountRepository.deleteByUserId(userId);
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public List<User> findDeletedBefore(Instant cutoff) {
 		return userRepository.findByIsDeletedAndDeletedAtBefore(1, cutoff).stream()
