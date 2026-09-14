@@ -31,7 +31,7 @@ public class UserJpaEntity {
 	@Column(name = "last_login_at")
 	private Instant lastLoginAt;
 
-	@Column(name = "created_at", insertable = false, updatable = false)
+	@Column(name = "created_at", updatable = false)
 	private Instant createdAt;
 
 	protected UserJpaEntity() {
@@ -87,5 +87,9 @@ public class UserJpaEntity {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	public void setCreatedAt(Instant createdAt) {
+		this.createdAt = createdAt;
 	}
 }

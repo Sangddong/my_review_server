@@ -62,6 +62,12 @@ public class User {
 		this.deletedAt = deletedAt;
 	}
 
+	public void changeNickname(String nickname) {
+		ensureActive();
+		validateNickname(nickname);
+		this.nickname = nickname.trim();
+	}
+
 	public void ensureActive() {
 		if (isDeleted != null) {
 			throw new DomainException("User is deleted");
