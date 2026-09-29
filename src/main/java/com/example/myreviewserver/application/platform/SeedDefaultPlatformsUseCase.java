@@ -48,7 +48,7 @@ public class SeedDefaultPlatformsUseCase {
 		for (DefaultPlatform defaults : DEFAULTS) {
 			toCreate.add(Platform.create(userId, defaults.name(), defaults.color(), sortOrder++));
 		}
-		platformRepository.saveAll(toCreate);
+		platformRepository.saveAll(userId, toCreate);
 	}
 
 	public static List<String> defaultNames() {

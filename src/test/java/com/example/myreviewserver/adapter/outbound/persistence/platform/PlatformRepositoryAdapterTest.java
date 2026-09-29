@@ -32,7 +32,7 @@ class PlatformRepositoryAdapterTest {
 
 	@Test
 	void saveAllInsertsMultipleRowsInOneCall() {
-		platformRepository.saveAll(List.of(
+		platformRepository.saveAll(2L, List.of(
 			Platform.create(2L, "네이버 블로그", "#03c75a", 0),
 			Platform.create(2L, "릴스", "#e1306c", 1),
 			Platform.create(2L, "숏츠", "#ff0000", 2)

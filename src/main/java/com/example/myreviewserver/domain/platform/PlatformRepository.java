@@ -13,10 +13,10 @@ public interface PlatformRepository {
 	Platform save(Platform platform);
 
 	/**
-	 * Inserts new platforms in a single multi-value INSERT.
-	 * All items must be new (id == null).
+	 * Inserts new platforms in a single multi-value INSERT for the given user.
+	 * sortOrder is the list index (0-based).
 	 */
-	void saveAll(List<Platform> platforms);
+	void saveAll(Long userId, List<Platform> platforms);
 
 	Optional<Platform> findById(Long id);
 
