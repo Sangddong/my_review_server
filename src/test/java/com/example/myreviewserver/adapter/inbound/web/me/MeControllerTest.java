@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.myreviewserver.adapter.inbound.security.JwtTokenProvider;
+import com.example.myreviewserver.application.user.SocialAccountUnlinkClient;
 import com.example.myreviewserver.domain.devicetoken.DevicePlatform;
 import com.example.myreviewserver.domain.devicetoken.DeviceToken;
 import com.example.myreviewserver.domain.devicetoken.DeviceTokenRepository;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -36,6 +38,9 @@ class MeControllerTest {
 
 	@Autowired
 	DeviceTokenRepository deviceTokenRepository;
+
+	@MockitoBean
+	SocialAccountUnlinkClient socialAccountUnlinkClient;
 
 	@Test
 	void withdrawRequiresAuthAndSoftDeletesOwnAccount() throws Exception {

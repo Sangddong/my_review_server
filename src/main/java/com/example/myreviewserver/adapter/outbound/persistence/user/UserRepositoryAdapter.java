@@ -3,6 +3,7 @@ package com.example.myreviewserver.adapter.outbound.persistence.user;
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.AuthProvider;
 import com.example.myreviewserver.domain.user.User;
+import com.example.myreviewserver.domain.user.UserOauthLink;
 import com.example.myreviewserver.domain.user.UserRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
@@ -61,6 +62,17 @@ public class UserRepositoryAdapter implements UserRepository {
 	@Override
 	public void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId) {
 		oauthAccountRepository.save(UserOauthAccountJpaEntity.of(userId, provider, providerUserId));
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<UserOauthLink> findOauthAccountsByUserId(Long userId) {
+		if (userId == null) {
+			return List.of();
+		}
+		return oauthAccountRepository.findByUserId(userId).stream()
+			.map(entity -> new UserOauthLink(entity.getProvider(), entity.getProviderUserId()))
+			.toList();
 	}
 
 	@Override

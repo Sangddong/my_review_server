@@ -2,6 +2,7 @@ package com.example.myreviewserver.adapter.outbound.kakao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -28,6 +29,7 @@ class KakaoOAuthClientAdapterTest {
 		properties = new KakaoProperties();
 		properties.setClientId("rest-api-key");
 		properties.setClientSecret("client-secret");
+		properties.setAdminKey("admin-key");
 		properties.setRedirectUris(List.of("http://localhost:5173/auth/login/kakao/"));
 		RestClient.Builder restClientBuilder = RestClient.builder();
 		server = MockRestServiceServer.bindTo(restClientBuilder).build();
@@ -58,6 +60,26 @@ class KakaoOAuthClientAdapterTest {
 		assertThat(profile.email()).isEqualTo("a@k.com");
 		assertThat(profile.nickname()).isEqualTo("nick");
 		server.verify();
+	}
+
+	@Test
+	void unlinksWithAdminKey() {
+		server.expect(requestTo("https://kapi.kakao.com/v1/user/unlink"))
+			.andExpect(method(HttpMethod.POST))
+			.andExpect(header("Authorization", "KakaoAK admin-key"))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("target_id=42")))
+			.andRespond(withSuccess("{\"id\":42}", MediaType.APPLICATION_JSON));
+
+		adapter.unlink("42");
+		server.verify();
+	}
+
+	@Test
+	void unlinkFailsWhenAdminKeyMissing() {
+		properties.setAdminKey("");
+		assertThatThrownBy(() -> adapter.unlink("42"))
+			.isInstanceOf(DomainException.class)
+			.hasMessageContaining("admin key");
 	}
 
 	@Test

@@ -2,6 +2,7 @@ package com.example.myreviewserver.application.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 
 import com.example.myreviewserver.domain.devicetoken.DevicePlatform;
 import com.example.myreviewserver.domain.devicetoken.DeviceToken;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -28,14 +30,19 @@ class WithdrawUserUseCaseTest {
 	@Autowired
 	DeviceTokenRepository deviceTokenRepository;
 
+	@MockitoBean
+	SocialAccountUnlinkClient socialAccountUnlinkClient;
+
 	@Test
-	void softDeletesUserRemovesTokensAndUnlinksOauth() {
+	void softDeletesUserRemovesTokensUnlinksProviderAndLocalOauth() {
 		User user = userRepository.save(User.create("withdraw@test.com", "withdrawer"));
 		userRepository.saveOauthAccount(user.getId(), AuthProvider.KAKAO, "kakao-withdraw-1");
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "withdraw-token-a", DevicePlatform.IOS));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "withdraw-token-b", DevicePlatform.ANDROID));
 
 		withdrawUserUseCase.execute(user.getId());
+
+		verify(socialAccountUnlinkClient).unlink(AuthProvider.KAKAO, "kakao-withdraw-1");
 
 		User withdrawn = userRepository.findById(user.getId()).orElseThrow();
 		assertThat(withdrawn.getIsDeleted()).isEqualTo(1);

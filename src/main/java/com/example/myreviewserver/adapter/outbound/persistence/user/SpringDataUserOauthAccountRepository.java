@@ -23,4 +23,6 @@ public interface SpringDataUserOauthAccountRepository extends JpaRepository<User
 	long deleteByUserId(Long userId);
 
 	long deleteByUserIdIn(List<Long> userIds);
+
+	List<UserOauthAccountJpaEntity> findByUserId(Long userId);
 }
