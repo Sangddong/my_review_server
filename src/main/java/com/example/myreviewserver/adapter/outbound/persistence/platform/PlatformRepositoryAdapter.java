@@ -60,17 +60,21 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 		);
 		for (int i = 0; i < platforms.size(); i++) {
 			if (i > 0) sql.append(", ");
-			sql.append("(").append(userId).append(", ?, ?, ").append(i).append(")");
+			Platform platform = platforms.get(i);
+			sql.append("(")
+				.append(userId).append(", '")
+				.append(escapeSql(platform.getName())).append("', '")
+				.append(escapeSql(platform.getColor())).append("', ")
+				.append(i)
+				.append(")");
 		}
 
-		var query = entityManager.createNativeQuery(sql.toString());
-		int parameterIndex = 1;
-		for (Platform platform : platforms) {
-			query.setParameter(parameterIndex++, platform.getName());
-			query.setParameter(parameterIndex++, platform.getColor());
-		}
-		query.executeUpdate();
+		entityManager.createNativeQuery(sql.toString()).executeUpdate();
 		entityManager.clear();
+	}
+
+	private static String escapeSql(String value) {
+		return value == null ? "" : value.replace("'", "''");
 	}
 
 	@Override
