@@ -31,6 +31,19 @@ class PlatformRepositoryAdapterTest {
 	PlatformRepository platformRepository;
 
 	@Test
+	void saveAllInsertsMultipleRowsInOneCall() {
+		platformRepository.saveAll(List.of(
+			Platform.create(2L, "네이버 블로그", "#03c75a", 0),
+			Platform.create(2L, "릴스", "#e1306c", 1),
+			Platform.create(2L, "숏츠", "#ff0000", 2)
+		));
+
+		assertThat(platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(2L))
+			.extracting(Platform::getName)
+			.containsExactly("네이버 블로그", "릴스", "숏츠");
+	}
+
+	@Test
 	void savesListsAndSoftDeletes() {
 		Platform created = platformRepository.save(
 			Platform.create(1L, "블로그", "#c6f8c8", 0)

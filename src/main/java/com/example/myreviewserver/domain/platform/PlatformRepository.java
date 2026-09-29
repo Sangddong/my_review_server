@@ -12,6 +12,12 @@ public interface PlatformRepository {
 
 	Platform save(Platform platform);
 
+	/**
+	 * Inserts new platforms in a single multi-value INSERT.
+	 * All items must be new (id == null).
+	 */
+	void saveAll(List<Platform> platforms);
+
 	Optional<Platform> findById(Long id);
 
 	Optional<Platform> findByIdAndUserId(Long id, Long userId);

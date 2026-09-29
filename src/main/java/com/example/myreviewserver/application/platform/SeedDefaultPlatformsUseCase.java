@@ -3,6 +3,7 @@ package com.example.myreviewserver.application.platform;
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,12 +43,12 @@ public class SeedDefaultPlatformsUseCase {
 		if (!active.isEmpty()) {
 			return;
 		}
+		List<Platform> toCreate = new ArrayList<>(DEFAULTS.size());
 		int sortOrder = 0;
 		for (DefaultPlatform defaults : DEFAULTS) {
-			platformRepository.save(
-				Platform.create(userId, defaults.name(), defaults.color(), sortOrder++)
-			);
+			toCreate.add(Platform.create(userId, defaults.name(), defaults.color(), sortOrder++));
 		}
+		platformRepository.saveAll(toCreate);
 	}
 
 	public static List<String> defaultNames() {
