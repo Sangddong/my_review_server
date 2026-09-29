@@ -14,6 +14,7 @@ public interface SpringDataUserOauthAccountRepository extends JpaRepository<User
 		where o.userId = u.id
 		  and o.provider = :provider
 		  and o.providerUserId = :providerUserId
+		  and u.isDeleted is null
 		""")
 	Optional<UserJpaEntity> findUserByProvider(
 		@Param("provider") AuthProvider provider,
@@ -23,4 +24,6 @@ public interface SpringDataUserOauthAccountRepository extends JpaRepository<User
 	long deleteByUserId(Long userId);
 
 	long deleteByUserIdIn(List<Long> userIds);
+
+	long deleteByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
 }
