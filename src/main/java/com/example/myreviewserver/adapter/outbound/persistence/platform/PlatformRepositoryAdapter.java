@@ -50,6 +50,34 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 	}
 
 	@Override
+	public void saveAll(Long userId, List<Platform> platforms) {
+		if (userId == null || platforms == null || platforms.isEmpty()) {
+			return;
+		}
+
+		StringBuilder sql = new StringBuilder(
+			"INSERT INTO platforms (user_id, name, color, sort_order) VALUES "
+		);
+		for (int i = 0; i < platforms.size(); i++) {
+			if (i > 0) sql.append(", ");
+			Platform platform = platforms.get(i);
+			sql.append("(")
+				.append(userId).append(", '")
+				.append(escapeSql(platform.getName())).append("', '")
+				.append(escapeSql(platform.getColor())).append("', ")
+				.append(i)
+				.append(")");
+		}
+
+		entityManager.createNativeQuery(sql.toString()).executeUpdate();
+		entityManager.clear();
+	}
+
+	private static String escapeSql(String value) {
+		return value == null ? "" : value.replace("'", "''");
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public Optional<Platform> findById(Long id) {
 		return springDataPlatformRepository.findById(id).map(PlatformPersistenceMapper::toDomain);

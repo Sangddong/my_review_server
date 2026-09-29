@@ -1,5 +1,6 @@
 package com.example.myreviewserver.application.auth;
 
+import com.example.myreviewserver.application.platform.SeedDefaultPlatformsUseCase;
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
@@ -9,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Common social login orchestration used by Google/Naver/Kakao adapters later.
+ *
+ * @Service: 서비스 빈으로 등록.
+ * @Transactional: DB 트랜잭션 경계.
  */
 @Service
 @Transactional
@@ -18,10 +22,16 @@ public class SocialLoginUseCase {
 
 	private final UserRepository userRepository;
 	private final AccessTokenProvider accessTokenProvider;
+	private final SeedDefaultPlatformsUseCase seedDefaultPlatformsUseCase;
 
-	public SocialLoginUseCase(UserRepository userRepository, AccessTokenProvider accessTokenProvider) {
+	public SocialLoginUseCase(
+		UserRepository userRepository,
+		AccessTokenProvider accessTokenProvider,
+		SeedDefaultPlatformsUseCase seedDefaultPlatformsUseCase
+	) {
 		this.userRepository = userRepository;
 		this.accessTokenProvider = accessTokenProvider;
+		this.seedDefaultPlatformsUseCase = seedDefaultPlatformsUseCase;
 	}
 
 	public AuthTokenResult execute(SocialLoginCommand command) {
@@ -35,6 +45,7 @@ public class SocialLoginUseCase {
 			try {
 				user = userRepository.save(User.create(command.email(), resolveNickname(command)));
 				userRepository.saveOauthAccount(user.getId(), command.provider(), command.providerUserId());
+				seedDefaultPlatformsUseCase.execute(user.getId());
 				newlyRegistered = true;
 			}
 			catch (DataIntegrityViolationException ex) {

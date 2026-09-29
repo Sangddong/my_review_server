@@ -12,6 +12,12 @@ public interface PlatformRepository {
 
 	Platform save(Platform platform);
 
+	/**
+	 * Inserts new platforms in a single multi-value INSERT for the given user.
+	 * sortOrder is the list index (0-based).
+	 */
+	void saveAll(Long userId, List<Platform> platforms);
+
 	Optional<Platform> findById(Long id);
 
 	Optional<Platform> findByIdAndUserId(Long id, Long userId);
