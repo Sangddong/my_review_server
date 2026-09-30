@@ -27,6 +27,17 @@ public record UpdateExperienceRequest(
 	String detailLink,
 
 	@Schema(description = "연결 플랫폼 목록 (보낼 때만 통째로 교체)", nullable = true)
-	List<CreateExperiencePlatformRequest> platformList
+	List<CreateExperiencePlatformRequest> platformList,
+
+	@Schema(
+		description = """
+			제출 완료 체험 수정 시 필수. 프론트 확인("이미 제출이 완료된 체험입니다. 레뷰 제출을 취소하시겠습니까?")에서
+			예이면 true. true면 제출을 해제한 뒤 수정을 반영하고, false/미전달이면 수정을 거부합니다.
+			미제출 체험에서는 무시됩니다.
+			""",
+		example = "true",
+		nullable = true
+	)
+	Boolean cancelSubmission
 ) {
 }
