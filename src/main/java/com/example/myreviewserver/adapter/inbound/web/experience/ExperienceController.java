@@ -192,8 +192,12 @@ public class ExperienceController {
 		summary = "체험 편집",
 		description = """
 			로그인한 사용자 본인 소유의 체험 기본 필드와 플랫폼 구성을 부분 수정합니다.
-			보낸 필드만 바뀌며, 제출 상태와 플랫폼 등록 완료 여부는 이 API에서 바꾸지 않습니다.
+			보낸 필드만 바뀌며, 플랫폼 등록 완료 여부는 이 API에서 바꾸지 않습니다.
 			platformList를 보내면 구성을 통째로 바꾸고, 남아 있는 플랫폼의 등록 상태는 유지합니다.
+			이미 제출 완료된 체험은 프론트에서
+			"이미 제출이 완료된 체험입니다. 레뷰 제출을 취소하시겠습니까?"를 물은 뒤
+			`cancelSubmission`으로 결과만 전달합니다.
+			true면 제출을 해제하고, false/미전달이면 제출 상태는 유지한 채 나머지 필드만 수정합니다.
 			"""
 	)
 	@ApiResponses({
@@ -224,7 +228,8 @@ public class ExperienceController {
 			request.reservationTime(),
 			request.reviewDeadline(),
 			request.detailLink(),
-			platformList
+			platformList,
+			request.cancelSubmission()
 		)));
 	}
 

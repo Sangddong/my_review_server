@@ -68,7 +68,8 @@ class UpdateExperienceUseCaseTest {
 			List.of(
 				new UpdateExperienceUseCase.PlatformLink(blog.getId(), true),
 				new UpdateExperienceUseCase.PlatformLink(youtube.getId(), false)
-			)
+			),
+			null
 		);
 
 		assertThat(updated.getName()).isEqualTo("성수 디저트");
@@ -102,11 +103,11 @@ class UpdateExperienceUseCaseTest {
 		));
 
 		assertThatThrownBy(() -> updateExperienceUseCase.update(
-			other.getId(), saved.getId(), "이름", null, null, null, null, null, null
+			other.getId(), saved.getId(), "이름", null, null, null, null, null, null, null
 		)).isInstanceOf(DomainException.class).hasMessage("Experience not found");
 
 		assertThatThrownBy(() -> updateExperienceUseCase.update(
-			owner.getId(), 999_999L, "이름", null, null, null, null, null, null
+			owner.getId(), 999_999L, "이름", null, null, null, null, null, null, null
 		)).isInstanceOf(DomainException.class).hasMessage("Experience not found");
 
 		assertThatThrownBy(() -> updateExperienceUseCase.update(
@@ -118,7 +119,77 @@ class UpdateExperienceUseCaseTest {
 			null,
 			null,
 			null,
-			List.of(new UpdateExperienceUseCase.PlatformLink(foreign.getId(), true))
+			List.of(new UpdateExperienceUseCase.PlatformLink(foreign.getId(), true)),
+			null
 		)).isInstanceOf(DomainException.class).hasMessage("Platform not found");
+	}
+
+	@Test
+	void keepsSubmittedWhenCancelSubmissionFalseAndUpdatesOtherFields() {
+		User user = userRepository.save(User.create("exp-update-submitted@test.com", "owner"));
+		Platform blog = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
+		Experience saved = experienceRepository.save(Experience.create(
+			user.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(blog.getId(), true))
+		));
+		saved.submitReview();
+		saved = experienceRepository.save(saved);
+
+		Experience updated = updateExperienceUseCase.update(
+			user.getId(),
+			saved.getId(),
+			"새이름",
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			false
+		);
+
+		assertThat(updated.getName()).isEqualTo("새이름");
+		assertThat(updated.isReviewSubmitted()).isTrue();
+	}
+
+	@Test
+	void unsubmitsThenUpdatesWhenCancelSubmissionTrue() {
+		User user = userRepository.save(User.create("exp-update-unsubmit@test.com", "owner"));
+		Platform blog = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
+		Experience saved = experienceRepository.save(Experience.create(
+			user.getId(),
+			"성수 카페",
+			ExperienceType.VISIT,
+			null,
+			null,
+			LocalDate.of(2026, 8, 25),
+			null,
+			List.of(ExperiencePlatform.of(blog.getId(), true))
+		));
+		saved.submitReview();
+		saved = experienceRepository.save(saved);
+		assertThat(saved.isReviewSubmitted()).isTrue();
+
+		Experience updated = updateExperienceUseCase.update(
+			user.getId(),
+			saved.getId(),
+			"성수 디저트",
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			true
+		);
+
+		assertThat(updated.getName()).isEqualTo("성수 디저트");
+		assertThat(updated.isReviewSubmitted()).isFalse();
 	}
 }
