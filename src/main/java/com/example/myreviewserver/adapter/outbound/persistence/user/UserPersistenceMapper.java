@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.persistence.user;
 
 import com.example.myreviewserver.domain.user.User;
+import java.time.Instant;
 
 final class UserPersistenceMapper {
 
@@ -14,6 +15,7 @@ final class UserPersistenceMapper {
 		entity.setIsDeleted(user.getIsDeleted());
 		entity.setDeletedAt(user.getDeletedAt());
 		entity.setLastLoginAt(user.getLastLoginAt());
+		entity.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt() : Instant.now());
 		return entity;
 	}
 
