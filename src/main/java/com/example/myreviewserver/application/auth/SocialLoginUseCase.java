@@ -43,14 +43,18 @@ public class SocialLoginUseCase {
 
 		if (user == null) {
 			try {
-				user = userRepository.save(User.create(command.email(), resolveNickname(command)));
-				userRepository.saveOauthAccount(user.getId(), command.provider(), command.providerUserId());
-				seedDefaultPlatformsUseCase.execute(user.getId());
+				user = registerNewUser(command);
 				newlyRegistered = true;
 			}
 			catch (DataIntegrityViolationException ex) {
+				// Concurrent first login, or oauth still pointing at a withdrawn user.
 				user = userRepository.findByProvider(command.provider(), command.providerUserId())
-					.orElseThrow(() -> ex);
+					.orElse(null);
+				if (user == null) {
+					userRepository.deleteOauthAccount(command.provider(), command.providerUserId());
+					user = registerNewUser(command);
+					newlyRegistered = true;
+				}
 			}
 		}
 
@@ -67,6 +71,13 @@ public class SocialLoginUseCase {
 			user.getNickname(),
 			newlyRegistered
 		);
+	}
+
+	private User registerNewUser(SocialLoginCommand command) {
+		User user = userRepository.save(User.create(command.email(), resolveNickname(command)));
+		userRepository.saveOauthAccount(user.getId(), command.provider(), command.providerUserId());
+		seedDefaultPlatformsUseCase.execute(user.getId());
+		return user;
 	}
 
 	private void validate(SocialLoginCommand command) {
