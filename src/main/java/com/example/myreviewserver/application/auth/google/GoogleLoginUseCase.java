@@ -35,12 +35,14 @@ public class GoogleLoginUseCase {
 			authorizationCode.trim(),
 			redirectUri.trim()
 		);
+		// refresh_token(access_type=offline) 우선. 없으면 access_token을 revoke용으로 저장.
 		return socialLoginUseCase.execute(new SocialLoginCommand(
 			AuthProvider.GOOGLE,
 			auth.profile().providerUserId(),
 			auth.profile().email(),
 			auth.profile().nickname(),
-			auth.refreshToken()
+			auth.refreshToken(),
+			auth.accessToken()
 		));
 	}
 }

@@ -50,7 +50,30 @@ class GoogleLoginUseCaseTest {
 		assertThat(result.accessToken()).isEqualTo("jwt");
 		assertThat(result.newlyRegistered()).isTrue();
 		verify(socialLoginUseCase).execute(eq(
-			new SocialLoginCommand(AuthProvider.GOOGLE, "google-99", "a@test.com", "alice", "refresh-g")
+			new SocialLoginCommand(
+				AuthProvider.GOOGLE, "google-99", "a@test.com", "alice", "refresh-g", "access"
+			)
+		));
+	}
+
+	@Test
+	void fallsBackToAccessTokenWhenRefreshMissing() {
+		when(googleOAuthClient.authenticate("code-1", "http://localhost:5173/auth/login/google/"))
+			.thenReturn(new GoogleOAuthResult(
+				new GoogleUserProfile("google-99", "a@test.com", "alice"),
+				"access-only",
+				null
+			));
+		when(socialLoginUseCase.execute(any())).thenReturn(
+			new AuthTokenResult("jwt", "Bearer", 1000L, 1L, "alice", false)
+		);
+
+		googleLoginUseCase.execute("code-1", "http://localhost:5173/auth/login/google/");
+
+		verify(socialLoginUseCase).execute(eq(
+			new SocialLoginCommand(
+				AuthProvider.GOOGLE, "google-99", "a@test.com", "alice", null, "access-only"
+			)
 		));
 	}
 

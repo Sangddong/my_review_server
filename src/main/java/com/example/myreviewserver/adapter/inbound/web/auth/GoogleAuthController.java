@@ -44,6 +44,9 @@ public class GoogleAuthController {
 		description = """
 			프론트 콜백에서 받은 `code`와, Google Cloud Console/서버 allowlist에 등록된 `redirectUri`로
 			구글 프로필을 확인한 뒤 서버 JWT를 발급합니다.
+			탈퇴 시 구글 앱 연결 끊기(revoke)를 위해 프론트 인가 URL에
+			`access_type=offline`과 `prompt=consent`를 넣어 refresh_token을 받는 것을 권장합니다.
+			refresh_token이 없으면 access_token을 저장해 탈퇴 시 revoke에 사용합니다.
 			"""
 	)
 	@ApiResponses({

@@ -57,13 +57,22 @@ public class SocialLoginUseCase {
 				}
 			}
 		}
-		else if (command.refreshToken() != null && !command.refreshToken().isBlank()) {
-			userRepository.saveOauthAccount(
-				user.getId(),
-				command.provider(),
-				command.providerUserId(),
-				command.refreshToken()
-			);
+		else {
+			String existingToken = userRepository.findOauthAccountsByUserId(user.getId()).stream()
+				.filter(link -> link.provider() == command.provider())
+				.map(link -> link.refreshToken())
+				.filter(token -> token != null && !token.isBlank())
+				.findFirst()
+				.orElse(null);
+			String revokeToken = resolveRevokeToken(command.refreshToken(), command.accessToken(), existingToken);
+			if (revokeToken != null && !revokeToken.equals(existingToken)) {
+				userRepository.saveOauthAccount(
+					user.getId(),
+					command.provider(),
+					command.providerUserId(),
+					revokeToken
+				);
+			}
 		}
 
 		user.ensureActive();
@@ -87,10 +96,27 @@ public class SocialLoginUseCase {
 			user.getId(),
 			command.provider(),
 			command.providerUserId(),
-			command.refreshToken()
+			resolveRevokeToken(command.refreshToken(), command.accessToken(), null)
 		);
 		seedDefaultPlatformsUseCase.execute(user.getId());
 		return user;
+	}
+
+	/**
+	 * Prefer provider refresh_token; keep an already-stored token rather than overwriting
+	 * it with a short-lived access_token; otherwise fall back to access_token for revoke.
+	 */
+	private static String resolveRevokeToken(String refreshToken, String accessToken, String existingToken) {
+		if (refreshToken != null && !refreshToken.isBlank()) {
+			return refreshToken.trim();
+		}
+		if (existingToken != null && !existingToken.isBlank()) {
+			return existingToken;
+		}
+		if (accessToken != null && !accessToken.isBlank()) {
+			return accessToken.trim();
+		}
+		return null;
 	}
 
 	private void validate(SocialLoginCommand command) {

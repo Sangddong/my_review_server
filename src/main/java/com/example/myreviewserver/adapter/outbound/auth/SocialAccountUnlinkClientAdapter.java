@@ -6,15 +6,20 @@ import com.example.myreviewserver.application.auth.naver.NaverOAuthClient;
 import com.example.myreviewserver.application.user.SocialAccountUnlinkClient;
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.UserOauthLink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
  * Routes provider unlink to Kakao / Naver / Google adapters.
+ * Missing Naver/Google refresh tokens skip provider revoke so local withdraw still succeeds.
  *
  * @Component: 스프링 빈.
  */
 @Component
 public class SocialAccountUnlinkClientAdapter implements SocialAccountUnlinkClient {
+
+	private static final Logger log = LoggerFactory.getLogger(SocialAccountUnlinkClientAdapter.class);
 
 	private final KakaoOAuthClient kakaoOAuthClient;
 	private final NaverOAuthClient naverOAuthClient;
@@ -44,15 +49,32 @@ public class SocialAccountUnlinkClientAdapter implements SocialAccountUnlinkClie
 			}
 			case NAVER -> {
 				if (link.refreshToken() == null || link.refreshToken().isBlank()) {
-					throw new DomainException("Naver refresh token is missing; login again then withdraw");
+					log.warn("Skipping Naver revoke: refresh token missing for providerUserId={}",
+						link.providerUserId());
+					return;
 				}
-				naverOAuthClient.unlink(link.refreshToken().trim(), true);
+				try {
+					naverOAuthClient.unlink(link.refreshToken().trim(), true);
+				}
+				catch (DomainException ex) {
+					log.warn("Naver revoke failed for providerUserId={}: {}",
+						link.providerUserId(), ex.getMessage());
+				}
 			}
 			case GOOGLE -> {
 				if (link.refreshToken() == null || link.refreshToken().isBlank()) {
-					throw new DomainException("Google refresh token is missing; login again then withdraw");
+					log.warn("Skipping Google revoke: token missing for providerUserId={}",
+						link.providerUserId());
+					return;
 				}
-				googleOAuthClient.unlink(link.refreshToken().trim());
+				try {
+					googleOAuthClient.unlink(link.refreshToken().trim());
+				}
+				catch (DomainException ex) {
+					// Expired access_token 등으로 revoke 실패해도 로컬 탈퇴는 진행.
+					log.warn("Google revoke failed for providerUserId={}: {}",
+						link.providerUserId(), ex.getMessage());
+				}
 			}
 		}
 	}

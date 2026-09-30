@@ -113,4 +113,40 @@ class SocialLoginUseCaseTest {
 			.hasSize(7);
 		assertThat(userRepository.findById(deleted.getId()).orElseThrow().getIsDeleted()).isEqualTo(1);
 	}
+
+	@Test
+	void keepsStoredRefreshTokenWhenOnlyAccessTokenReturned() {
+		AuthTokenResult first = socialLoginUseCase.execute(
+			new SocialLoginCommand(
+				AuthProvider.GOOGLE, "google-keep-rt", "keep@test.com", "keep", "refresh-long", null
+			)
+		);
+		assertThat(first.newlyRegistered()).isTrue();
+		assertThat(userRepository.findOauthAccountsByUserId(first.userId()))
+			.extracting(link -> link.refreshToken())
+			.containsExactly("refresh-long");
+
+		socialLoginUseCase.execute(
+			new SocialLoginCommand(
+				AuthProvider.GOOGLE, "google-keep-rt", "keep@test.com", "keep", null, "access-short"
+			)
+		);
+
+		assertThat(userRepository.findOauthAccountsByUserId(first.userId()))
+			.extracting(link -> link.refreshToken())
+			.containsExactly("refresh-long");
+	}
+
+	@Test
+	void storesAccessTokenWhenRefreshMissingOnRegister() {
+		AuthTokenResult first = socialLoginUseCase.execute(
+			new SocialLoginCommand(
+				AuthProvider.GOOGLE, "google-access-only", "ao@test.com", "ao", null, "access-1"
+			)
+		);
+		assertThat(first.newlyRegistered()).isTrue();
+		assertThat(userRepository.findOauthAccountsByUserId(first.userId()))
+			.extracting(link -> link.refreshToken())
+			.containsExactly("access-1");
+	}
 }
