@@ -125,7 +125,7 @@ class UpdateExperienceUseCaseTest {
 	}
 
 	@Test
-	void rejectsEditWhenSubmittedWithoutCancelSubmission() {
+	void keepsSubmittedWhenCancelSubmissionFalseAndUpdatesOtherFields() {
 		User user = userRepository.save(User.create("exp-update-submitted@test.com", "owner"));
 		Platform blog = platformRepository.save(Platform.create(user.getId(), "블로그", "#111111", 0));
 		Experience saved = experienceRepository.save(Experience.create(
@@ -140,17 +140,22 @@ class UpdateExperienceUseCaseTest {
 		));
 		saved.submitReview();
 		saved = experienceRepository.save(saved);
-		Long experienceId = saved.getId();
 
-		assertThatThrownBy(() -> updateExperienceUseCase.update(
-			user.getId(), experienceId, "새이름", null, null, null, null, null, null, null
-		)).isInstanceOf(DomainException.class)
-			.hasMessage("Submitted experience requires cancelSubmission=true to edit");
+		Experience updated = updateExperienceUseCase.update(
+			user.getId(),
+			saved.getId(),
+			"새이름",
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			false
+		);
 
-		assertThatThrownBy(() -> updateExperienceUseCase.update(
-			user.getId(), experienceId, "새이름", null, null, null, null, null, null, false
-		)).isInstanceOf(DomainException.class)
-			.hasMessage("Submitted experience requires cancelSubmission=true to edit");
+		assertThat(updated.getName()).isEqualTo("새이름");
+		assertThat(updated.isReviewSubmitted()).isTrue();
 	}
 
 	@Test

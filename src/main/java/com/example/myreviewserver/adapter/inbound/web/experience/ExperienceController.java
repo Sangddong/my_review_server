@@ -196,8 +196,8 @@ public class ExperienceController {
 			platformList를 보내면 구성을 통째로 바꾸고, 남아 있는 플랫폼의 등록 상태는 유지합니다.
 			이미 제출 완료된 체험은 프론트에서
 			"이미 제출이 완료된 체험입니다. 레뷰 제출을 취소하시겠습니까?"를 물은 뒤
-			`cancelSubmission=true`일 때만 제출을 해제하고 수정합니다.
-			`cancelSubmission`이 false이거나 없으면 수정을 거부합니다.
+			`cancelSubmission`으로 결과만 전달합니다.
+			true면 제출을 해제하고, false/미전달이면 제출 상태는 유지한 채 나머지 필드만 수정합니다.
 			"""
 	)
 	@ApiResponses({

@@ -20,7 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Partially updates an experience owned by the authenticated user.
  * Per-platform registration is not changed here.
- * Submitted experiences may be edited only when cancelSubmission=true (unsubmit then update).
+ * When the experience is already submitted, cancelSubmission=true unsubmits it;
+ * otherwise submission status is left unchanged while other fields are updated.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션.
@@ -62,12 +63,7 @@ public class UpdateExperienceUseCase {
 		Experience experience = experienceRepository.findByIdAndUserId(experienceId, userId)
 			.orElseThrow(() -> new DomainException("Experience not found"));
 
-		if (experience.isReviewSubmitted()) {
-			if (!Boolean.TRUE.equals(cancelSubmission)) {
-				throw new DomainException(
-					"Submitted experience requires cancelSubmission=true to edit"
-				);
-			}
+		if (experience.isReviewSubmitted() && Boolean.TRUE.equals(cancelSubmission)) {
 			experience.unsubmitReview();
 		}
 
