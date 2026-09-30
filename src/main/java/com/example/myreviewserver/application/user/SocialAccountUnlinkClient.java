@@ -1,6 +1,6 @@
 package com.example.myreviewserver.application.user;
 
-import com.example.myreviewserver.domain.user.AuthProvider;
+import com.example.myreviewserver.domain.user.UserOauthLink;
 
 /**
  * Unlinks the app connection at the social provider (consent / connected services).
@@ -8,5 +8,5 @@ import com.example.myreviewserver.domain.user.AuthProvider;
  */
 public interface SocialAccountUnlinkClient {
 
-	void unlink(AuthProvider provider, String providerUserId);
+	void unlink(UserOauthLink link);
 }

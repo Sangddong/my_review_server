@@ -45,7 +45,7 @@ class MeControllerTest {
 	@Test
 	void withdrawRequiresAuthAndSoftDeletesOwnAccount() throws Exception {
 		User user = userRepository.save(User.create("me-withdraw@test.com", "meWithdraw"));
-		userRepository.saveOauthAccount(user.getId(), AuthProvider.GOOGLE, "google-me-withdraw");
+		userRepository.saveOauthAccount(user.getId(), AuthProvider.GOOGLE, "google-me-withdraw", null);
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "me-withdraw-token", DevicePlatform.WEB));
 		String token = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
 

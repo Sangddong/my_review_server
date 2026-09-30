@@ -6,7 +6,7 @@ package com.example.myreviewserver.application.auth.kakao;
  */
 public interface KakaoOAuthClient {
 
-	KakaoUserProfile fetchUserProfile(String authorizationCode, String redirectUri);
+	KakaoOAuthResult authenticate(String authorizationCode, String redirectUri);
 
 	/**
 	 * Disconnects the Kakao app connection for the given Kakao user id (admin key).

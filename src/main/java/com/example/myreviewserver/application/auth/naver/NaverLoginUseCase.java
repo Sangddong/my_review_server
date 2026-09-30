@@ -32,12 +32,13 @@ public class NaverLoginUseCase {
 			throw new DomainException("state is required");
 		}
 
-		NaverUserProfile profile = naverOAuthClient.fetchUserProfile(authorizationCode.trim(), state.trim());
+		NaverOAuthResult auth = naverOAuthClient.authenticate(authorizationCode.trim(), state.trim());
 		return socialLoginUseCase.execute(new SocialLoginCommand(
 			AuthProvider.NAVER,
-			profile.providerUserId(),
-			profile.email(),
-			profile.nickname()
+			auth.profile().providerUserId(),
+			auth.profile().email(),
+			auth.profile().nickname(),
+			auth.refreshToken()
 		));
 	}
 }

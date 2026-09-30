@@ -36,13 +36,16 @@ class WithdrawUserUseCaseTest {
 	@Test
 	void softDeletesUserRemovesTokensUnlinksProviderAndLocalOauth() {
 		User user = userRepository.save(User.create("withdraw@test.com", "withdrawer"));
-		userRepository.saveOauthAccount(user.getId(), AuthProvider.KAKAO, "kakao-withdraw-1");
+		userRepository.saveOauthAccount(user.getId(), AuthProvider.KAKAO, "kakao-withdraw-1", null);
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "withdraw-token-a", DevicePlatform.IOS));
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "withdraw-token-b", DevicePlatform.ANDROID));
 
 		withdrawUserUseCase.execute(user.getId());
 
-		verify(socialAccountUnlinkClient).unlink(AuthProvider.KAKAO, "kakao-withdraw-1");
+		verify(socialAccountUnlinkClient).unlink(org.mockito.ArgumentMatchers.argThat(link ->
+			link.provider() == AuthProvider.KAKAO
+				&& "kakao-withdraw-1".equals(link.providerUserId())
+		));
 
 		User withdrawn = userRepository.findById(user.getId()).orElseThrow();
 		assertThat(withdrawn.getIsDeleted()).isEqualTo(1);

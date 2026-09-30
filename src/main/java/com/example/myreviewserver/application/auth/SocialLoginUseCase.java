@@ -44,7 +44,12 @@ public class SocialLoginUseCase {
 		if (user == null) {
 			try {
 				user = userRepository.save(User.create(command.email(), resolveNickname(command)));
-				userRepository.saveOauthAccount(user.getId(), command.provider(), command.providerUserId());
+				userRepository.saveOauthAccount(
+					user.getId(),
+					command.provider(),
+					command.providerUserId(),
+					command.refreshToken()
+				);
 				seedDefaultPlatformsUseCase.execute(user.getId());
 				newlyRegistered = true;
 			}
@@ -52,6 +57,14 @@ public class SocialLoginUseCase {
 				user = userRepository.findByProvider(command.provider(), command.providerUserId())
 					.orElseThrow(() -> ex);
 			}
+		}
+		else if (command.refreshToken() != null && !command.refreshToken().isBlank()) {
+			userRepository.saveOauthAccount(
+				user.getId(),
+				command.provider(),
+				command.providerUserId(),
+				command.refreshToken()
+			);
 		}
 
 		user.ensureActive();

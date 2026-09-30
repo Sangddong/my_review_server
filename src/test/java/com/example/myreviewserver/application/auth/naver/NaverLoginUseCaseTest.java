@@ -33,8 +33,12 @@ class NaverLoginUseCaseTest {
 
 	@Test
 	void exchangesCodeThenDelegatesToSocialLogin() {
-		when(naverOAuthClient.fetchUserProfile("code-1", "state-1"))
-			.thenReturn(new NaverUserProfile("naver-99", "a@test.com", "alice"));
+		when(naverOAuthClient.authenticate("code-1", "state-1"))
+			.thenReturn(new NaverOAuthResult(
+				new NaverUserProfile("naver-99", "a@test.com", "alice"),
+				"access",
+				"refresh-n"
+			));
 		when(socialLoginUseCase.execute(any())).thenReturn(
 			new AuthTokenResult("jwt", "Bearer", 1000L, 1L, "alice", true)
 		);
@@ -44,7 +48,7 @@ class NaverLoginUseCaseTest {
 		assertThat(result.accessToken()).isEqualTo("jwt");
 		assertThat(result.newlyRegistered()).isTrue();
 		verify(socialLoginUseCase).execute(eq(
-			new SocialLoginCommand(AuthProvider.NAVER, "naver-99", "a@test.com", "alice")
+			new SocialLoginCommand(AuthProvider.NAVER, "naver-99", "a@test.com", "alice", "refresh-n")
 		));
 	}
 

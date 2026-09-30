@@ -63,7 +63,7 @@ class PurgeWithdrawnUsersUseCaseTest {
 		expiredExperience.setPlatformRegistered(expiredPlatform.getId(), true);
 		expiredExperience = experienceRepository.save(expiredExperience);
 		deviceTokenRepository.save(DeviceToken.create(expired.getId(), "expired-token", DevicePlatform.IOS));
-		userRepository.saveOauthAccount(expired.getId(), AuthProvider.NAVER, "naver-expired");
+		userRepository.saveOauthAccount(expired.getId(), AuthProvider.NAVER, "naver-expired", null);
 
 		platformRepository.save(Platform.create(recent.getId(), "인스타", "#222222", 0));
 		platformRepository.save(Platform.create(active.getId(), "유튜브", "#333333", 0));

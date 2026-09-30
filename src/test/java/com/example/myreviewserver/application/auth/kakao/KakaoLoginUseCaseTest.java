@@ -33,8 +33,12 @@ class KakaoLoginUseCaseTest {
 
 	@Test
 	void exchangesCodeThenDelegatesToSocialLogin() {
-		when(kakaoOAuthClient.fetchUserProfile("code-1", "http://localhost:5173/auth/login/kakao/"))
-			.thenReturn(new KakaoUserProfile("kakao-99", "a@test.com", "alice"));
+		when(kakaoOAuthClient.authenticate("code-1", "http://localhost:5173/auth/login/kakao/"))
+			.thenReturn(new KakaoOAuthResult(
+				new KakaoUserProfile("kakao-99", "a@test.com", "alice"),
+				"access",
+				"refresh-k"
+			));
 		when(socialLoginUseCase.execute(any())).thenReturn(
 			new AuthTokenResult("jwt", "Bearer", 1000L, 1L, "alice", true)
 		);
@@ -47,7 +51,7 @@ class KakaoLoginUseCaseTest {
 		assertThat(result.accessToken()).isEqualTo("jwt");
 		assertThat(result.newlyRegistered()).isTrue();
 		verify(socialLoginUseCase).execute(eq(
-			new SocialLoginCommand(AuthProvider.KAKAO, "kakao-99", "a@test.com", "alice")
+			new SocialLoginCommand(AuthProvider.KAKAO, "kakao-99", "a@test.com", "alice", "refresh-k")
 		));
 	}
 

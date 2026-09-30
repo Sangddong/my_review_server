@@ -8,9 +8,10 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthResult;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -41,7 +42,7 @@ class KakaoOAuthClientAdapterTest {
 		server.expect(requestTo("https://kauth.kakao.com/oauth/token"))
 			.andExpect(method(HttpMethod.POST))
 			.andRespond(withSuccess("""
-				{"access_token":"kakao-access","token_type":"bearer"}
+				{"access_token":"kakao-access","refresh_token":"kakao-refresh","token_type":"bearer"}
 				""", MediaType.APPLICATION_JSON));
 
 		server.expect(requestTo("https://kapi.kakao.com/v2/user/me"))
@@ -51,14 +52,15 @@ class KakaoOAuthClientAdapterTest {
 				{"id":42,"kakao_account":{"email":"a@k.com","profile":{"nickname":"nick"}}}
 				""", MediaType.APPLICATION_JSON));
 
-		KakaoUserProfile profile = adapter.fetchUserProfile(
+		KakaoOAuthResult auth = adapter.authenticate(
 			"code",
 			"http://localhost:5173/auth/login/kakao/"
 		);
 
-		assertThat(profile.providerUserId()).isEqualTo("42");
-		assertThat(profile.email()).isEqualTo("a@k.com");
-		assertThat(profile.nickname()).isEqualTo("nick");
+		assertThat(auth.profile().providerUserId()).isEqualTo("42");
+		assertThat(auth.profile().email()).isEqualTo("a@k.com");
+		assertThat(auth.profile().nickname()).isEqualTo("nick");
+		assertThat(auth.refreshToken()).isEqualTo("kakao-refresh");
 		server.verify();
 	}
 
@@ -67,7 +69,7 @@ class KakaoOAuthClientAdapterTest {
 		server.expect(requestTo("https://kapi.kakao.com/v1/user/unlink"))
 			.andExpect(method(HttpMethod.POST))
 			.andExpect(header("Authorization", "KakaoAK admin-key"))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("target_id=42")))
+			.andExpect(content().string(Matchers.containsString("target_id=42")))
 			.andRespond(withSuccess("{\"id\":42}", MediaType.APPLICATION_JSON));
 
 		adapter.unlink("42");
@@ -84,7 +86,7 @@ class KakaoOAuthClientAdapterTest {
 
 	@Test
 	void failsWhenRedirectUriNotAllowed() {
-		assertThatThrownBy(() -> adapter.fetchUserProfile("code", "https://evil.example/callback"))
+		assertThatThrownBy(() -> adapter.authenticate("code", "https://evil.example/callback"))
 			.isInstanceOf(DomainException.class)
 			.hasMessageContaining("not allowed");
 	}
@@ -92,7 +94,7 @@ class KakaoOAuthClientAdapterTest {
 	@Test
 	void failsWhenNotConfigured() {
 		properties.setClientSecret("");
-		assertThatThrownBy(() -> adapter.fetchUserProfile("code", "http://localhost:5173/auth/login/kakao/"))
+		assertThatThrownBy(() -> adapter.authenticate("code", "http://localhost:5173/auth/login/kakao/"))
 			.isInstanceOf(DomainException.class)
 			.hasMessageContaining("not configured");
 	}

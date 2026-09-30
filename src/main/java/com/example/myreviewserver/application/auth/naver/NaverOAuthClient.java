@@ -6,5 +6,10 @@ package com.example.myreviewserver.application.auth.naver;
  */
 public interface NaverOAuthClient {
 
-	NaverUserProfile fetchUserProfile(String authorizationCode, String state);
+	NaverOAuthResult authenticate(String authorizationCode, String state);
+
+	/**
+	 * Revokes Naver app connection using a stored refresh or access token.
+	 */
+	void unlink(String token, boolean refreshToken);
 }

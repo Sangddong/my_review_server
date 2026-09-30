@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.kakao;
 
 import com.example.myreviewserver.application.auth.kakao.KakaoOAuthClient;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthResult;
 import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
@@ -38,11 +39,12 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 	}
 
 	@Override
-	public KakaoUserProfile fetchUserProfile(String authorizationCode, String redirectUri) {
+	public KakaoOAuthResult authenticate(String authorizationCode, String redirectUri) {
 		ensureConfigured();
 		ensureRedirectAllowed(redirectUri);
-		String accessToken = exchangeCodeForAccessToken(authorizationCode, redirectUri);
-		return fetchProfile(accessToken);
+		KakaoTokenResponse token = exchangeCodeForToken(authorizationCode, redirectUri);
+		KakaoUserProfile profile = fetchProfile(token.accessToken());
+		return new KakaoOAuthResult(profile, token.accessToken(), blankToNull(token.refreshToken()));
 	}
 
 	@Override
@@ -98,7 +100,7 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 		}
 	}
 
-	private String exchangeCodeForAccessToken(String authorizationCode, String redirectUri) {
+	private KakaoTokenResponse exchangeCodeForToken(String authorizationCode, String redirectUri) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
 		form.add("client_id", kakaoProperties.getClientId());
@@ -129,7 +131,7 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 		if (body.accessToken() == null || body.accessToken().isBlank()) {
 			throw new DomainException("Kakao access_token is missing");
 		}
-		return body.accessToken();
+		return body;
 	}
 
 	private KakaoUserProfile fetchProfile(String accessToken) {
@@ -170,11 +172,16 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 
 	record KakaoTokenResponse(
 		String access_token,
+		String refresh_token,
 		String error,
 		String error_description
 	) {
 		String accessToken() {
 			return access_token;
+		}
+
+		String refreshToken() {
+			return refresh_token;
 		}
 
 		String errorDescription() {

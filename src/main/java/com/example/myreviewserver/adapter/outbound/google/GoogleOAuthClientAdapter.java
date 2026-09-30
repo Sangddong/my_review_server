@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.google;
 
 import com.example.myreviewserver.application.auth.google.GoogleOAuthClient;
+import com.example.myreviewserver.application.auth.google.GoogleOAuthResult;
 import com.example.myreviewserver.application.auth.google.GoogleUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
@@ -13,7 +14,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 /**
- * Calls Google token + userinfo APIs.
+ * Calls Google token + userinfo + revoke APIs.
  *
  * @Component: Spring 빈으로 등록되어 GoogleOAuthClient 구현체로 주입됨.
  */
@@ -21,6 +22,7 @@ import org.springframework.web.client.RestClientResponseException;
 public class GoogleOAuthClientAdapter implements GoogleOAuthClient {
 
 	private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
+	private static final String REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 	private static final String PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
 	private final GoogleProperties googleProperties;
@@ -37,11 +39,34 @@ public class GoogleOAuthClientAdapter implements GoogleOAuthClient {
 	}
 
 	@Override
-	public GoogleUserProfile fetchUserProfile(String authorizationCode, String redirectUri) {
+	public GoogleOAuthResult authenticate(String authorizationCode, String redirectUri) {
 		ensureConfigured();
 		ensureRedirectAllowed(redirectUri);
-		String accessToken = exchangeCodeForAccessToken(authorizationCode, redirectUri);
-		return fetchProfile(accessToken);
+		GoogleTokenResponse token = exchangeCodeForToken(authorizationCode, redirectUri);
+		GoogleUserProfile profile = fetchProfile(token.accessToken());
+		return new GoogleOAuthResult(profile, token.accessToken(), blankToNull(token.refreshToken()));
+	}
+
+	@Override
+	public void unlink(String token) {
+		if (token == null || token.isBlank()) {
+			throw new DomainException("Google token is required for unlink");
+		}
+
+		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+		form.add("token", token.trim());
+
+		try {
+			restClient.post()
+				.uri(REVOKE_URL)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(form)
+				.retrieve()
+				.toBodilessEntity();
+		}
+		catch (RestClientResponseException ex) {
+			throw new DomainException("Failed to unlink Google account", ex);
+		}
 	}
 
 	private void ensureConfigured() {
@@ -61,7 +86,7 @@ public class GoogleOAuthClientAdapter implements GoogleOAuthClient {
 		}
 	}
 
-	private String exchangeCodeForAccessToken(String authorizationCode, String redirectUri) {
+	private GoogleTokenResponse exchangeCodeForToken(String authorizationCode, String redirectUri) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
 		form.add("client_id", googleProperties.getClientId());
@@ -92,7 +117,7 @@ public class GoogleOAuthClientAdapter implements GoogleOAuthClient {
 		if (body.accessToken() == null || body.accessToken().isBlank()) {
 			throw new DomainException("Google access_token is missing");
 		}
-		return body.accessToken();
+		return body;
 	}
 
 	private GoogleUserProfile fetchProfile(String accessToken) {
@@ -126,11 +151,16 @@ public class GoogleOAuthClientAdapter implements GoogleOAuthClient {
 
 	record GoogleTokenResponse(
 		String access_token,
+		String refresh_token,
 		String error,
 		String error_description
 	) {
 		String accessToken() {
 			return access_token;
+		}
+
+		String refreshToken() {
+			return refresh_token;
 		}
 
 		String errorDescription() {

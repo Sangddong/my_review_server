@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.myreviewserver.application.auth.google.GoogleOAuthClient;
+import com.example.myreviewserver.application.auth.google.GoogleOAuthResult;
 import com.example.myreviewserver.application.auth.google.GoogleUserProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,14 @@ class GoogleAuthControllerTest {
 
 	@Test
 	void logsInWithGoogleCode() throws Exception {
-		when(googleOAuthClient.fetchUserProfile(
+		when(googleOAuthClient.authenticate(
 			eq("auth-code"),
 			eq("http://localhost:5173/auth/login/google/")
-		)).thenReturn(new GoogleUserProfile("g-1", "g@test.com", "googleUser"));
+		)).thenReturn(new GoogleOAuthResult(
+			new GoogleUserProfile("g-1", "g@test.com", "googleUser"),
+			"access",
+			"refresh"
+		));
 
 		mockMvc.perform(post("/api/auth/google")
 				.contentType(MediaType.APPLICATION_JSON)

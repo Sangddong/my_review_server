@@ -51,7 +51,7 @@ public class WithdrawUserUseCase {
 
 		List<UserOauthLink> oauthLinks = userRepository.findOauthAccountsByUserId(userId);
 		for (UserOauthLink link : oauthLinks) {
-			socialAccountUnlinkClient.unlink(link.provider(), link.providerUserId());
+			socialAccountUnlinkClient.unlink(link);
 		}
 
 		user.withdraw(Instant.now());
