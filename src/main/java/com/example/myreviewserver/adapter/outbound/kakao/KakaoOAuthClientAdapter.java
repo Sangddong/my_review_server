@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.kakao;
 
 import com.example.myreviewserver.application.auth.kakao.KakaoOAuthClient;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthResult;
 import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
@@ -22,6 +23,7 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 
 	private static final String TOKEN_URL = "https://kauth.kakao.com/oauth/token";
 	private static final String PROFILE_URL = "https://kapi.kakao.com/v2/user/me";
+	private static final String UNLINK_URL = "https://kapi.kakao.com/v1/user/unlink";
 
 	private final KakaoProperties kakaoProperties;
 	private final RestClient restClient;
@@ -37,11 +39,48 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 	}
 
 	@Override
-	public KakaoUserProfile fetchUserProfile(String authorizationCode, String redirectUri) {
+	public KakaoOAuthResult authenticate(String authorizationCode, String redirectUri) {
 		ensureConfigured();
 		ensureRedirectAllowed(redirectUri);
-		String accessToken = exchangeCodeForAccessToken(authorizationCode, redirectUri);
-		return fetchProfile(accessToken);
+		KakaoTokenResponse token = exchangeCodeForToken(authorizationCode, redirectUri);
+		KakaoUserProfile profile = fetchProfile(token.accessToken());
+		return new KakaoOAuthResult(profile, token.accessToken(), blankToNull(token.refreshToken()));
+	}
+
+	@Override
+	public void unlink(String kakaoUserId) {
+		if (kakaoUserId == null || kakaoUserId.isBlank()) {
+			throw new DomainException("kakaoUserId is required");
+		}
+		String adminKey = kakaoProperties.getAdminKey();
+		if (adminKey == null || adminKey.isBlank()) {
+			throw new DomainException("Kakao admin key is not configured");
+		}
+
+		long targetId;
+		try {
+			targetId = Long.parseLong(kakaoUserId.trim());
+		}
+		catch (NumberFormatException ex) {
+			throw new DomainException("Invalid Kakao user id", ex);
+		}
+
+		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+		form.add("target_id_type", "user_id");
+		form.add("target_id", String.valueOf(targetId));
+
+		try {
+			restClient.post()
+				.uri(UNLINK_URL)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.header("Authorization", "KakaoAK " + adminKey)
+				.body(form)
+				.retrieve()
+				.toBodilessEntity();
+		}
+		catch (RestClientResponseException ex) {
+			throw new DomainException("Failed to unlink Kakao account", ex);
+		}
 	}
 
 	private void ensureConfigured() {
@@ -61,7 +100,7 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 		}
 	}
 
-	private String exchangeCodeForAccessToken(String authorizationCode, String redirectUri) {
+	private KakaoTokenResponse exchangeCodeForToken(String authorizationCode, String redirectUri) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
 		form.add("client_id", kakaoProperties.getClientId());
@@ -92,7 +131,7 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 		if (body.accessToken() == null || body.accessToken().isBlank()) {
 			throw new DomainException("Kakao access_token is missing");
 		}
-		return body.accessToken();
+		return body;
 	}
 
 	private KakaoUserProfile fetchProfile(String accessToken) {
@@ -133,11 +172,16 @@ public class KakaoOAuthClientAdapter implements KakaoOAuthClient {
 
 	record KakaoTokenResponse(
 		String access_token,
+		String refresh_token,
 		String error,
 		String error_description
 	) {
 		String accessToken() {
 			return access_token;
+		}
+
+		String refreshToken() {
+			return refresh_token;
 		}
 
 		String errorDescription() {

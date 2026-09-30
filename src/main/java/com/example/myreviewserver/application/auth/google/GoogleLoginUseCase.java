@@ -31,15 +31,16 @@ public class GoogleLoginUseCase {
 			throw new DomainException("redirectUri is required");
 		}
 
-		GoogleUserProfile profile = googleOAuthClient.fetchUserProfile(
+		GoogleOAuthResult auth = googleOAuthClient.authenticate(
 			authorizationCode.trim(),
 			redirectUri.trim()
 		);
 		return socialLoginUseCase.execute(new SocialLoginCommand(
 			AuthProvider.GOOGLE,
-			profile.providerUserId(),
-			profile.email(),
-			profile.nickname()
+			auth.profile().providerUserId(),
+			auth.profile().email(),
+			auth.profile().nickname(),
+			auth.refreshToken()
 		));
 	}
 }

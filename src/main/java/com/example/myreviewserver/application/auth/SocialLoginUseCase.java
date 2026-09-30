@@ -57,6 +57,14 @@ public class SocialLoginUseCase {
 				}
 			}
 		}
+		else if (command.refreshToken() != null && !command.refreshToken().isBlank()) {
+			userRepository.saveOauthAccount(
+				user.getId(),
+				command.provider(),
+				command.providerUserId(),
+				command.refreshToken()
+			);
+		}
 
 		user.ensureActive();
 		user.markLogin();
@@ -75,7 +83,12 @@ public class SocialLoginUseCase {
 
 	private User registerNewUser(SocialLoginCommand command) {
 		User user = userRepository.save(User.create(command.email(), resolveNickname(command)));
-		userRepository.saveOauthAccount(user.getId(), command.provider(), command.providerUserId());
+		userRepository.saveOauthAccount(
+			user.getId(),
+			command.provider(),
+			command.providerUserId(),
+			command.refreshToken()
+		);
 		seedDefaultPlatformsUseCase.execute(user.getId());
 		return user;
 	}

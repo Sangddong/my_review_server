@@ -6,5 +6,10 @@ package com.example.myreviewserver.application.auth.google;
  */
 public interface GoogleOAuthClient {
 
-	GoogleUserProfile fetchUserProfile(String authorizationCode, String redirectUri);
+	GoogleOAuthResult authenticate(String authorizationCode, String redirectUri);
+
+	/**
+	 * Revokes Google OAuth token (access or refresh) to disconnect the app.
+	 */
+	void unlink(String token);
 }

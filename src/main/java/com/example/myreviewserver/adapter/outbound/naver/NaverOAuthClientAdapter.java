@@ -1,6 +1,7 @@
 package com.example.myreviewserver.adapter.outbound.naver;
 
 import com.example.myreviewserver.application.auth.naver.NaverOAuthClient;
+import com.example.myreviewserver.application.auth.naver.NaverOAuthResult;
 import com.example.myreviewserver.application.auth.naver.NaverUserProfile;
 import com.example.myreviewserver.domain.shared.DomainException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 /**
- * Calls Naver token + profile APIs.
+ * Calls Naver token + profile + revoke APIs.
  *
  * @Component: Spring 빈으로 등록되어 NaverOAuthClient 구현체로 주입됨.
  */
@@ -20,6 +21,7 @@ import org.springframework.web.client.RestClientResponseException;
 public class NaverOAuthClientAdapter implements NaverOAuthClient {
 
 	private static final String TOKEN_URL = "https://nid.naver.com/oauth2.0/token";
+	private static final String REVOKE_URL = "https://nid.naver.com/oauth2.0/revoke";
 	private static final String PROFILE_URL = "https://openapi.naver.com/v1/nid/me";
 
 	private final NaverProperties naverProperties;
@@ -36,10 +38,37 @@ public class NaverOAuthClientAdapter implements NaverOAuthClient {
 	}
 
 	@Override
-	public NaverUserProfile fetchUserProfile(String authorizationCode, String state) {
+	public NaverOAuthResult authenticate(String authorizationCode, String state) {
 		ensureConfigured();
-		String accessToken = exchangeCodeForAccessToken(authorizationCode, state);
-		return fetchProfile(accessToken);
+		NaverTokenResponse token = exchangeCodeForToken(authorizationCode, state);
+		NaverUserProfile profile = fetchProfile(token.accessToken());
+		return new NaverOAuthResult(profile, token.accessToken(), blankToNull(token.refreshToken()));
+	}
+
+	@Override
+	public void unlink(String token, boolean refreshToken) {
+		if (token == null || token.isBlank()) {
+			throw new DomainException("Naver token is required for unlink");
+		}
+		ensureConfigured();
+
+		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+		form.add("client_id", naverProperties.getClientId());
+		form.add("client_secret", naverProperties.getClientSecret());
+		form.add("token", token.trim());
+		form.add("token_type_hint", refreshToken ? "refresh_token" : "access_token");
+
+		try {
+			restClient.post()
+				.uri(REVOKE_URL)
+				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+				.body(form)
+				.retrieve()
+				.toBodilessEntity();
+		}
+		catch (RestClientResponseException ex) {
+			throw new DomainException("Failed to unlink Naver account", ex);
+		}
 	}
 
 	private void ensureConfigured() {
@@ -49,7 +78,7 @@ public class NaverOAuthClientAdapter implements NaverOAuthClient {
 		}
 	}
 
-	private String exchangeCodeForAccessToken(String authorizationCode, String state) {
+	private NaverTokenResponse exchangeCodeForToken(String authorizationCode, String state) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
 		form.add("client_id", naverProperties.getClientId());
@@ -80,7 +109,7 @@ public class NaverOAuthClientAdapter implements NaverOAuthClient {
 		if (body.accessToken() == null || body.accessToken().isBlank()) {
 			throw new DomainException("Naver access_token is missing");
 		}
-		return body.accessToken();
+		return body;
 	}
 
 	private NaverUserProfile fetchProfile(String accessToken) {
@@ -120,11 +149,16 @@ public class NaverOAuthClientAdapter implements NaverOAuthClient {
 
 	record NaverTokenResponse(
 		String access_token,
+		String refresh_token,
 		String error,
 		String error_description
 	) {
 		String accessToken() {
 			return access_token;
+		}
+
+		String refreshToken() {
+			return refresh_token;
 		}
 
 		String errorDescription() {

@@ -2,13 +2,15 @@ package com.example.myreviewserver.adapter.outbound.naver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.example.myreviewserver.application.auth.naver.NaverUserProfile;
+import com.example.myreviewserver.application.auth.naver.NaverOAuthResult;
 import com.example.myreviewserver.domain.shared.DomainException;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -37,7 +39,7 @@ class NaverOAuthClientAdapterTest {
 		server.expect(requestTo("https://nid.naver.com/oauth2.0/token"))
 			.andExpect(method(HttpMethod.POST))
 			.andRespond(withSuccess("""
-				{"access_token":"naver-access","token_type":"bearer"}
+				{"access_token":"naver-access","refresh_token":"naver-refresh","token_type":"bearer"}
 				""", MediaType.APPLICATION_JSON));
 
 		server.expect(requestTo("https://openapi.naver.com/v1/nid/me"))
@@ -47,18 +49,30 @@ class NaverOAuthClientAdapterTest {
 				{"resultcode":"00","message":"success","response":{"id":"nv-42","email":"a@n.com","nickname":"nick"}}
 				""", MediaType.APPLICATION_JSON));
 
-		NaverUserProfile profile = adapter.fetchUserProfile("code", "state");
+		NaverOAuthResult auth = adapter.authenticate("code", "state");
 
-		assertThat(profile.providerUserId()).isEqualTo("nv-42");
-		assertThat(profile.email()).isEqualTo("a@n.com");
-		assertThat(profile.nickname()).isEqualTo("nick");
+		assertThat(auth.profile().providerUserId()).isEqualTo("nv-42");
+		assertThat(auth.profile().email()).isEqualTo("a@n.com");
+		assertThat(auth.profile().nickname()).isEqualTo("nick");
+		assertThat(auth.refreshToken()).isEqualTo("naver-refresh");
+		server.verify();
+	}
+
+	@Test
+	void unlinksWithRefreshToken() {
+		server.expect(requestTo("https://nid.naver.com/oauth2.0/revoke"))
+			.andExpect(method(HttpMethod.POST))
+			.andExpect(content().string(Matchers.containsString("token=naver-refresh")))
+			.andRespond(withSuccess("", MediaType.APPLICATION_JSON));
+
+		adapter.unlink("naver-refresh", true);
 		server.verify();
 	}
 
 	@Test
 	void failsWhenNotConfigured() {
 		properties.setClientId("");
-		assertThatThrownBy(() -> adapter.fetchUserProfile("code", "state"))
+		assertThatThrownBy(() -> adapter.authenticate("code", "state"))
 			.isInstanceOf(DomainException.class)
 			.hasMessageContaining("not configured");
 	}

@@ -12,7 +12,9 @@ public interface UserRepository {
 
 	Optional<User> findByProvider(AuthProvider provider, String providerUserId);
 
-	void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId);
+	void saveOauthAccount(Long userId, AuthProvider provider, String providerUserId, String refreshToken);
+
+	List<UserOauthLink> findOauthAccountsByUserId(Long userId);
 
 	/**
 	 * Unlinks all OAuth providers for the user so the same social account can register again.

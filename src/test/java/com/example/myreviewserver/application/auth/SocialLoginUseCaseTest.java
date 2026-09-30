@@ -3,6 +3,7 @@ package com.example.myreviewserver.application.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.myreviewserver.application.platform.SeedDefaultPlatformsUseCase;
+import com.example.myreviewserver.application.user.SocialAccountUnlinkClient;
 import com.example.myreviewserver.application.user.WithdrawUserUseCase;
 import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -31,6 +33,9 @@ class SocialLoginUseCaseTest {
 
 	@Autowired
 	UserRepository userRepository;
+
+	@MockitoBean
+	SocialAccountUnlinkClient socialAccountUnlinkClient;
 
 	@Test
 	void registersThenLogsInExistingUser() {
@@ -97,7 +102,7 @@ class SocialLoginUseCaseTest {
 		User deleted = userRepository.save(User.create("orphan@test.com", "orphan"));
 		deleted.withdraw(Instant.now());
 		deleted = userRepository.save(deleted);
-		userRepository.saveOauthAccount(deleted.getId(), AuthProvider.KAKAO, "kakao-orphan-1");
+		userRepository.saveOauthAccount(deleted.getId(), AuthProvider.KAKAO, "kakao-orphan-1", null);
 
 		AuthTokenResult result = socialLoginUseCase.execute(
 			new SocialLoginCommand(AuthProvider.KAKAO, "kakao-orphan-1", "orphan@test.com", "orphan")

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.myreviewserver.application.auth.naver.NaverOAuthClient;
+import com.example.myreviewserver.application.auth.naver.NaverOAuthResult;
 import com.example.myreviewserver.application.auth.naver.NaverUserProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,12 @@ class NaverAuthControllerTest {
 
 	@Test
 	void logsInWithNaverCode() throws Exception {
-		when(naverOAuthClient.fetchUserProfile(eq("auth-code"), eq("csrf-state")))
-			.thenReturn(new NaverUserProfile("nv-1", "n@test.com", "naverUser"));
+		when(naverOAuthClient.authenticate(eq("auth-code"), eq("csrf-state")))
+			.thenReturn(new NaverOAuthResult(
+				new NaverUserProfile("nv-1", "n@test.com", "naverUser"),
+				"access",
+				"refresh"
+			));
 
 		mockMvc.perform(post("/api/auth/naver")
 				.contentType(MediaType.APPLICATION_JSON)

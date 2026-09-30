@@ -10,6 +10,10 @@ public record SocialLoginCommand(
 	AuthProvider provider,
 	String providerUserId,
 	String email,
-	String nickname
+	String nickname,
+	String refreshToken
 ) {
+	public SocialLoginCommand(AuthProvider provider, String providerUserId, String email, String nickname) {
+		this(provider, providerUserId, email, nickname, null);
+	}
 }

@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.myreviewserver.adapter.inbound.security.JwtTokenProvider;
+import com.example.myreviewserver.application.user.SocialAccountUnlinkClient;
 import com.example.myreviewserver.domain.devicetoken.DevicePlatform;
 import com.example.myreviewserver.domain.devicetoken.DeviceToken;
 import com.example.myreviewserver.domain.devicetoken.DeviceTokenRepository;
@@ -21,6 +22,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -39,6 +41,9 @@ class MeControllerTest {
 
 	@Autowired
 	DeviceTokenRepository deviceTokenRepository;
+
+	@MockitoBean
+	SocialAccountUnlinkClient socialAccountUnlinkClient;
 
 	@Test
 	void getAndPatchProfileRequireAuthAndUpdateNickname() throws Exception {
@@ -72,7 +77,7 @@ class MeControllerTest {
 	@Test
 	void withdrawRequiresAuthAndSoftDeletesOwnAccount() throws Exception {
 		User user = userRepository.save(User.create("me-withdraw@test.com", "meWithdraw"));
-		userRepository.saveOauthAccount(user.getId(), AuthProvider.GOOGLE, "google-me-withdraw");
+		userRepository.saveOauthAccount(user.getId(), AuthProvider.GOOGLE, "google-me-withdraw", null);
 		deviceTokenRepository.save(DeviceToken.create(user.getId(), "me-withdraw-token", DevicePlatform.WEB));
 		String token = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
 

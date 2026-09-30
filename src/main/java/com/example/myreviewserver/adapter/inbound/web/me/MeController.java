@@ -100,9 +100,11 @@ public class MeController {
 	@Operation(
 		summary = "회원 탈퇴",
 		description = """
-			계정을 soft delete 합니다. 푸시 기기 토큰과 소셜 로그인 연동을 즉시 해제합니다.
+			계정을 soft delete 합니다. 카카오·네이버·구글 **앱 연결 끊기(unlink/revoke)** 후
+			로컬 OAuth 연동·푸시 기기 토큰을 즉시 제거합니다.
 			체험·플랫폼 등 나머지 데이터는 보관 기간 후 스케줄러가 hard delete 합니다.
 			탈퇴 후 같은 JWT는 더 이상 인증되지 않으며, 같은 소셜 계정으로 재가입할 수 있습니다.
+			카카오는 `KAKAO_ADMIN_KEY`가 필요합니다. 네이버/구글은 로그인 시 저장한 refresh_token으로 revoke 합니다.
 			"""
 	)
 	@ApiResponses({

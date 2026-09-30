@@ -29,17 +29,26 @@ public class UserOauthAccountJpaEntity {
 	@Column(name = "provider_user_id", nullable = false, length = 191)
 	private String providerUserId;
 
+	@Column(name = "refresh_token", length = 512)
+	private String refreshToken;
+
 	@Column(name = "created_at", insertable = false, updatable = false)
 	private Instant createdAt;
 
 	protected UserOauthAccountJpaEntity() {
 	}
 
-	public static UserOauthAccountJpaEntity of(Long userId, AuthProvider provider, String providerUserId) {
+	public static UserOauthAccountJpaEntity of(
+		Long userId,
+		AuthProvider provider,
+		String providerUserId,
+		String refreshToken
+	) {
 		UserOauthAccountJpaEntity entity = new UserOauthAccountJpaEntity();
 		entity.userId = userId;
 		entity.provider = provider;
 		entity.providerUserId = providerUserId;
+		entity.refreshToken = refreshToken;
 		return entity;
 	}
 
@@ -57,5 +66,17 @@ public class UserOauthAccountJpaEntity {
 
 	public String getProviderUserId() {
 		return providerUserId;
+	}
+
+	public void setProviderUserId(String providerUserId) {
+		this.providerUserId = providerUserId;
+	}
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
 	}
 }

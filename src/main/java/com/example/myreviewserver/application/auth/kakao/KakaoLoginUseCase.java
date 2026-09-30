@@ -32,15 +32,16 @@ public class KakaoLoginUseCase {
 			throw new DomainException("redirectUri is required");
 		}
 
-		KakaoUserProfile profile = kakaoOAuthClient.fetchUserProfile(
+		KakaoOAuthResult auth = kakaoOAuthClient.authenticate(
 			authorizationCode.trim(),
 			redirectUri.trim()
 		);
 		return socialLoginUseCase.execute(new SocialLoginCommand(
 			AuthProvider.KAKAO,
-			profile.providerUserId(),
-			profile.email(),
-			profile.nickname()
+			auth.profile().providerUserId(),
+			auth.profile().email(),
+			auth.profile().nickname(),
+			auth.refreshToken()
 		));
 	}
 }

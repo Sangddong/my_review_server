@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.myreviewserver.application.auth.kakao.KakaoOAuthClient;
+import com.example.myreviewserver.application.auth.kakao.KakaoOAuthResult;
 import com.example.myreviewserver.application.auth.kakao.KakaoUserProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,14 @@ class KakaoAuthControllerTest {
 
 	@Test
 	void logsInWithKakaoCode() throws Exception {
-		when(kakaoOAuthClient.fetchUserProfile(
+		when(kakaoOAuthClient.authenticate(
 			eq("auth-code"),
 			eq("http://localhost:5173/auth/login/kakao/")
-		)).thenReturn(new KakaoUserProfile("kk-1", "k@test.com", "kakaoUser"));
+		)).thenReturn(new KakaoOAuthResult(
+			new KakaoUserProfile("kk-1", "k@test.com", "kakaoUser"),
+			"access",
+			"refresh"
+		));
 
 		mockMvc.perform(post("/api/auth/kakao")
 				.contentType(MediaType.APPLICATION_JSON)

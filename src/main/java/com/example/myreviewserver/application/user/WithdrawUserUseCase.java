@@ -3,6 +3,7 @@ package com.example.myreviewserver.application.user;
 import com.example.myreviewserver.domain.devicetoken.DeviceTokenRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import com.example.myreviewserver.domain.user.User;
+import com.example.myreviewserver.domain.user.UserOauthLink;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.time.Instant;
 import java.util.List;
@@ -12,9 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Soft-deletes the authenticated user, stops push immediately, and unlinks OAuth
- * so the same social account can register again. Hard delete of remaining data is
- * handled later by {@link PurgeWithdrawnUsersUseCase}.
+ * Soft-deletes the authenticated user, unlinks social app connections, stops push,
+ * and removes local OAuth rows so the same social account can register again.
+ * Hard delete of remaining data is handled later by {@link PurgeWithdrawnUsersUseCase}.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션.
@@ -27,13 +28,16 @@ public class WithdrawUserUseCase {
 
 	private final UserRepository userRepository;
 	private final DeviceTokenRepository deviceTokenRepository;
+	private final SocialAccountUnlinkClient socialAccountUnlinkClient;
 
 	public WithdrawUserUseCase(
 		UserRepository userRepository,
-		DeviceTokenRepository deviceTokenRepository
+		DeviceTokenRepository deviceTokenRepository,
+		SocialAccountUnlinkClient socialAccountUnlinkClient
 	) {
 		this.userRepository = userRepository;
 		this.deviceTokenRepository = deviceTokenRepository;
+		this.socialAccountUnlinkClient = socialAccountUnlinkClient;
 	}
 
 	public void execute(Long userId) {
@@ -44,12 +48,18 @@ public class WithdrawUserUseCase {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new DomainException("User not found"));
 		user.ensureActive();
+
+		List<UserOauthLink> oauthLinks = userRepository.findOauthAccountsByUserId(userId);
+		for (UserOauthLink link : oauthLinks) {
+			socialAccountUnlinkClient.unlink(link);
+		}
+
 		user.withdraw(Instant.now());
 		userRepository.save(user);
 
 		// Stop push immediately; remaining rows are purged with the user after retention.
 		deviceTokenRepository.deleteAllByUserIdIn(List.of(userId));
-		// Unlink OAuth now so the same provider account can create a new user.
+		// Remove local oauth rows after provider unlink so the same account can re-register.
 		userRepository.deleteOauthAccountsByUserId(userId);
 
 		log.info("User withdrawn: userId={}", userId);

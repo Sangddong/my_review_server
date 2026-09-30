@@ -23,6 +23,11 @@ public class KakaoProperties {
 	private String clientSecret = "";
 
 	/**
+	 * Kakao Admin key — used to unlink users on withdraw (never expose to clients).
+	 */
+	private String adminKey = "";
+
+	/**
 	 * Allowed OAuth redirect URIs registered in Kakao Developers console.
 	 */
 	private List<String> redirectUris = new ArrayList<>();
@@ -41,6 +46,14 @@ public class KakaoProperties {
 
 	public void setClientSecret(String clientSecret) {
 		this.clientSecret = clientSecret;
+	}
+
+	public String getAdminKey() {
+		return adminKey;
+	}
+
+	public void setAdminKey(String adminKey) {
+		this.adminKey = adminKey;
 	}
 
 	public List<String> getRedirectUris() {
