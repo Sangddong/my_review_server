@@ -21,6 +21,11 @@ public interface UserRepository {
 	 */
 	void deleteOauthAccountsByUserId(Long userId);
 
+	/**
+	 * Deletes the oauth row for a provider identity (e.g. orphaned after soft-delete).
+	 */
+	void deleteOauthAccount(AuthProvider provider, String providerUserId);
+
 	List<User> findDeletedBefore(Instant cutoff);
 
 	int deleteAllByIdIn(List<Long> userIdList);

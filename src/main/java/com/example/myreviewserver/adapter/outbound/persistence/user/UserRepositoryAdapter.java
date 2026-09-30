@@ -105,6 +105,14 @@ public class UserRepositoryAdapter implements UserRepository {
 	}
 
 	@Override
+	public void deleteOauthAccount(AuthProvider provider, String providerUserId) {
+		if (provider == null || providerUserId == null || providerUserId.isBlank()) {
+			return;
+		}
+		oauthAccountRepository.deleteByProviderAndProviderUserId(provider, providerUserId.trim());
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public List<User> findDeletedBefore(Instant cutoff) {
 		return userRepository.findByIsDeletedAndDeletedAtBefore(1, cutoff).stream()
