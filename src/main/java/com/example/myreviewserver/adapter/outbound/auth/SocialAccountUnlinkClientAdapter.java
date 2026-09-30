@@ -53,15 +53,28 @@ public class SocialAccountUnlinkClientAdapter implements SocialAccountUnlinkClie
 						link.providerUserId());
 					return;
 				}
-				naverOAuthClient.unlink(link.refreshToken().trim(), true);
+				try {
+					naverOAuthClient.unlink(link.refreshToken().trim(), true);
+				}
+				catch (DomainException ex) {
+					log.warn("Naver revoke failed for providerUserId={}: {}",
+						link.providerUserId(), ex.getMessage());
+				}
 			}
 			case GOOGLE -> {
 				if (link.refreshToken() == null || link.refreshToken().isBlank()) {
-					log.warn("Skipping Google revoke: refresh token missing for providerUserId={}",
+					log.warn("Skipping Google revoke: token missing for providerUserId={}",
 						link.providerUserId());
 					return;
 				}
-				googleOAuthClient.unlink(link.refreshToken().trim());
+				try {
+					googleOAuthClient.unlink(link.refreshToken().trim());
+				}
+				catch (DomainException ex) {
+					// Expired access_token 등으로 revoke 실패해도 로컬 탈퇴는 진행.
+					log.warn("Google revoke failed for providerUserId={}: {}",
+						link.providerUserId(), ex.getMessage());
+				}
 			}
 		}
 	}
