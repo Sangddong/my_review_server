@@ -5,7 +5,9 @@ import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,21 +57,23 @@ public class PlatformRepositoryAdapter implements PlatformRepository {
 			return;
 		}
 
-		StringBuilder sql = new StringBuilder(
-			"INSERT INTO platforms (user_id, name, color, sort_order) VALUES "
-		);
+		List<String> rows = new ArrayList<>();
 		for (int i = 0; i < platforms.size(); i++) {
-			if (i > 0) sql.append(", ");
 			Platform platform = platforms.get(i);
-			sql.append("(")
-				.append(userId).append(", '")
-				.append(escapeSql(platform.getName())).append("', '")
-				.append(escapeSql(platform.getColor())).append("', ")
-				.append(i)
-				.append(")");
+			String row = String.format(
+				Locale.ROOT,
+				"(%d, '%s', '%s', %d)",
+				userId,
+				escapeSql(platform.getName()),
+				escapeSql(platform.getColor()),
+				i
+			);
+			rows.add(row);
 		}
+		String sql = "INSERT INTO platforms (user_id, name, color, sort_order) VALUES "
+			+ String.join(", ", rows);
 
-		entityManager.createNativeQuery(sql.toString()).executeUpdate();
+		entityManager.createNativeQuery(sql).executeUpdate();
 		entityManager.clear();
 	}
 
