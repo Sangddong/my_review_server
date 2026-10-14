@@ -1,0 +1,51 @@
+# 로컬/스테이징용: MySQL + API
+# 사용: cp env.deploy.example env.deploy && docker compose --env-file env.deploy up --build
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-my_review}
+      MYSQL_USER: ${MYSQL_USER:-my_review}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - my_review_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build: .
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-my_review}
+      MYSQL_USER: ${MYSQL_USER:-my_review}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
+      KAKAO_ADMIN_KEY: ${KAKAO_ADMIN_KEY:-}
+      KAKAO_REDIRECT_URIS: ${KAKAO_REDIRECT_URIS:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URIS: ${GOOGLE_REDIRECT_URIS:-}
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-*}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  my_review_mysql:
