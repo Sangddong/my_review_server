@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Partially updates an experience owned by the authenticated user.
- * Submission and per-platform registration are not changed here.
+ * Per-platform registration is not changed here.
+ * When the experience is already submitted, cancelSubmission=true unsubmits it;
+ * otherwise submission status is left unchanged while other fields are updated.
  *
  * @Service: 서비스 빈.
  * @Transactional: DB 트랜잭션.
@@ -48,7 +50,8 @@ public class UpdateExperienceUseCase {
 		LocalTime reservationTime,
 		LocalDate reviewDeadline,
 		String detailLink,
-		List<PlatformLink> platformList
+		List<PlatformLink> platformList,
+		Boolean cancelSubmission
 	) {
 		if (userId == null) {
 			throw new DomainException("userId is required");
@@ -59,6 +62,10 @@ public class UpdateExperienceUseCase {
 
 		Experience experience = experienceRepository.findByIdAndUserId(experienceId, userId)
 			.orElseThrow(() -> new DomainException("Experience not found"));
+
+		if (experience.isReviewSubmitted() && Boolean.TRUE.equals(cancelSubmission)) {
+			experience.unsubmitReview();
+		}
 
 		if (name != null) {
 			experience.rename(name);
