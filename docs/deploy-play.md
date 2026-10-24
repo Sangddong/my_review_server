@@ -49,7 +49,21 @@ trailing slash 필수.
 1. `GET https://api…/api/health` → UP  
 2. 앱/웹에서 소셜 로그인 1회 (code → `POST /api/auth/...`)
 
-## 5. 이 레포에서 하지 않는 것
+## 5. 개인정보처리방침·이용약관 URL (#103)
+
+API가 HTTPS로 배포되면 아래 경로가 **인증 없이** 공개됩니다.
+
+| 문서 | 경로 |
+|------|------|
+| 개인정보처리방침 | `https://{API_HOST}/legal/privacy` (또는 `/privacy`) |
+| 이용약관 | `https://{API_HOST}/legal/terms` (또는 `/terms`) |
+
+로컬 확인: http://localhost:8080/legal/privacy · http://localhost:8080/legal/terms
+
+Play Console / App Store Connect / 앱 설정 화면의 링크에 위 URL을 등록하세요.
+
+## 6. 이 레포에서 하지 않는 것
 
 - PaaS 계정 생성·결제·커스텀 도메인 DNS (운영자)
+- Play Console·앱 설정 UI에 URL 붙여넣기 (운영자 / 앱 레포)
 - Play Console 업로드 (앱 레포 `docs/play-store.md`)
