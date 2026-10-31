@@ -59,8 +59,8 @@
 | 항목 | 역할 | 비고 | 상태 | 이슈 |
 |---|---|---|---|---|
 | 앱 버전 / 빌드 번호 | 앱 | 패키지 메타데이터 | 앱 | — |
-| 개인정보처리방침 링크 | 앱 + **스토어** | 공개 HTTPS URL 필요 | 미구현 | [#103](https://github.com/Sangddong/my_review_server/issues/103) |
-| 이용약관 링크 | 앱 + 스토어(권장) | 동일 호스팅 | 미구현 | [#103](https://github.com/Sangddong/my_review_server/issues/103) |
+| 개인정보처리방침 링크 | 앱 + **스토어** | `{API}/legal/privacy` | **서버 문서·경로 완료** (스토어/앱에 URL 연결은 운영) | [#103](https://github.com/Sangddong/my_review_server/issues/103) |
+| 이용약관 링크 | 앱 + 스토어(권장) | `{API}/legal/terms` | **서버 문서·경로 완료** (스토어/앱에 URL 연결은 운영) | [#103](https://github.com/Sangddong/my_review_server/issues/103) |
 | 오픈소스 라이선스 | 앱 | 스토어·법무 관행 | 앱 | — |
 | 지원 이메일 / 한국 연락처 | 스토어 | Play Console 계정 정보 | 등록 시 | — |
 
