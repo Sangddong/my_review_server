@@ -7,8 +7,7 @@
 - 이를 보다 효율적으로 관리할 수 있도록 지원하는 것이 **나만의 체험단** 앱입니다.
 - 어떤 사이트에서 지원받았는지, 어느 플랫폼에 리뷰를 업로드해야 하는지, 마감일과 체험일은 언제인지 등을 보다 효율적으로 관리하고 통합하여 한 눈에 확인하고자 개발하였습니다.
 ### ✔️ 역할
-- 개인 프로젝트로
-- 기획 + 다자인 + 프론트&백엔드 개발 + 배포 모두 혼자 진행하였습니다 😂
+- **개인 프로젝트**로, 기획 + 다자인 + 프론트&백엔드 개발 + 배포 모두 혼자 진행하였습니다.
 
 # ⚙️ SYSTEM STRUCTURE
 ### 시스템 아키텍처
@@ -64,6 +63,75 @@
   | 테스트 | 서비스가 JPA에 붙어 있으면 DB와 같이 검증하는 경우가 많음 | 규칙은 DB 없이, 외부 호출은 가짜 인터페이스로 검증 가능 |
 
 # API 문서
+### 인증
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| POST | `/api/auth/google` | 구글 로그인 후 JWT를 발급한다. |
+| POST | `/api/auth/kakao` | 카카오 로그인 후 JWT를 발급한다. |
+| POST | `/api/auth/naver` | 네이버 로그인 후 JWT를 발급한다. |
+
+### 내 정보
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/me` | 로그인 사용자의 프로필을 조회한다. |
+| PATCH | `/api/me` | 닉네임을 변경한다. |
+| DELETE | `/api/me` | 회원 탈퇴를 처리한다. |
+
+### 알림
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/me/notifications` | 내 알림을 최신순으로 조회한다. |
+| PATCH | `/api/me/notifications/{id}/read` | 알림 하나를 읽음 처리한다. |
+| PATCH | `/api/me/notifications/read-all` | 읽지 않은 알림을 모두 읽음 처리한다. |
+| DELETE | `/api/me/notifications` | 알림을 soft delete한다. 본문 `idList`로 여러 건을 지울 수 있다. |
+
+### 알림 설정
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/me/notification-settings` | D3, TODAY, OVERDUE 수신 여부를 조회한다. |
+| PATCH | `/api/me/notification-settings` | 규칙별 푸시 수신 여부를 변경한다. |
+
+### 디바이스 토큰
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| PUT | `/api/me/device-tokens` | 디바이스 토큰을 등록하거나 같은 토큰이면 갱신한다. |
+| DELETE | `/api/me/device-tokens` | 본인 디바이스 토큰을 삭제한다. |
+
+### 체험
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/experiences/upcoming` | 아직 제출하지 않은 체험 목록을 조회한다. |
+| GET | `/api/experiences/completed` | 제출이 끝난 체험 목록을 조회한다. |
+| GET | `/api/experiences/{id}` | 체험 상세를 조회한다. |
+| POST | `/api/experiences` | 체험을 만들고 리뷰 플랫폼을 연결한다. |
+| PATCH | `/api/experiences/{id}` | 체험 내용과 플랫폼 구성을 수정한다. |
+| DELETE | `/api/experiences` | 체험 1건 이상을 동시에 soft delete한다. |
+| PUT | `/api/experiences/{id}/platforms/{platformId}/registration` | 해당 플랫폼의 리뷰 등록 완료 여부를 바꾼다. |
+| PATCH | `/api/experiences/{id}/submission` | 체험 전체의 리뷰 제출 여부를 바꾼다. |
+
+### 플랫폼
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/platforms` | 삭제되지 않은 내 플랫폼 목록을 조회한다. |
+| POST | `/api/platforms` | 플랫폼을 추가한다. |
+| PATCH | `/api/platforms/{id}` | 플랫폼 이름·색을 수정한다. |
+| DELETE | `/api/platforms/{id}` | 플랫폼을 soft delete한다. |
+| PUT | `/api/platforms/reorder` | 플랫폼 표시 순서를 바꾼다. |
+
+### 기타
+
+| Method | 주소 | 설명 |
+|---|---|---|
+| GET | `/api/health` | 서버가 살아 있는지 확인한다. |
+| GET | `/legal/privacy`, `/privacy` | 개인정보 처리방침 페이지를 연다. |
+| GET | `/legal/terms`, `/terms` | 이용약관 페이지를 연다. |
 
 # 🚀 TROUBLE SHOOTING
 
