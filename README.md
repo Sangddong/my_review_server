@@ -14,6 +14,8 @@
 ### 시스템 아키텍처
 ### ERD
 
+![ERD](docs/ERD.png)
+
 # 💡 TECH STACK & WHY?
 ### ✔️ 사용 기술
 
