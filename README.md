@@ -136,6 +136,7 @@
 | GET | `/legal/privacy`, `/privacy` | 개인정보 처리방침 페이지를 연다. |
 | GET | `/legal/terms`, `/terms` | 이용약관 페이지를 연다. |
 <br >
+
 # 👩🏻‍💻 RETROSPECT
 #### ✔️ 성과
 - 협찬 서비스들을 한 곳에서 통합 관리할 수 있습니다.
