@@ -11,11 +11,14 @@
 <br >
 
 # ⚙️ SYSTEM STRUCTURE
-### 시스템 아키텍처
-### ERD
+### ✔️ 시스템 아키텍처
+<img width="864" height="1152" alt="image" src="https://github.com/user-attachments/assets/1f8bceae-49a8-42e0-bc39-dc94091c30c8" />
+<br >
+
+### ✔️ ERD
 
 ![ERD](docs/ERD.png)
-<br >
+<br />
 
 # 💡 TECH STACK & WHY?
 ### ✔️ 사용 기술
