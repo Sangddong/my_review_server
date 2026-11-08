@@ -21,8 +21,7 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 		RecordingExtractor extractor = new RecordingExtractor();
 		ExtractExperienceFromScreenshotUseCase useCase = new ExtractExperienceFromScreenshotUseCase(
 			new ScreenshotImageResizer(),
-			extractor,
-			new ReviewCalendarDeadlineReader()
+			extractor
 		);
 
 		ExtractedExperienceDraft draft = useCase.extract(png(2400, 1200));
@@ -38,8 +37,7 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 		RecordingExtractor extractor = new RecordingExtractor();
 		ExtractExperienceFromScreenshotUseCase useCase = new ExtractExperienceFromScreenshotUseCase(
 			new ScreenshotImageResizer(),
-			extractor,
-			new ReviewCalendarDeadlineReader()
+			extractor
 		);
 
 		assertThatThrownBy(() -> useCase.extract(new byte[0]))
