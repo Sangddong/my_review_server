@@ -24,6 +24,11 @@ class ReviewCalendarDeadlineReaderTest {
 		assertThat(reader.readDayOfMonth(calendar(3, 1, 0))).hasValue(5);
 	}
 
+	@Test
+	void ignoresAPinkChipThatOpensAPeriodBar() throws IOException {
+		assertThat(reader.readDayOfMonth(calendarWithPeriodBar())).isEmpty();
+	}
+
 	/**
 	 * @param dayOneColumn column of the 1st, 0 = Sunday
 	 * @param pillWeek week row that holds the pill
@@ -55,6 +60,17 @@ class ReviewCalendarDeadlineReaderTest {
 			26,
 			12
 		);
+		graphics.dispose();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ImageIO.write(image, "png", out);
+		return out.toByteArray();
+	}
+
+	private static byte[] calendarWithPeriodBar() throws IOException {
+		BufferedImage image = ImageIO.read(new java.io.ByteArrayInputStream(calendar(0, 3, 0)));
+		Graphics2D graphics = image.createGraphics();
+		graphics.setColor(new Color(170, 170, 170));
+		graphics.fillRect(80, 168, 140, 8);
 		graphics.dispose();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		ImageIO.write(image, "png", out);

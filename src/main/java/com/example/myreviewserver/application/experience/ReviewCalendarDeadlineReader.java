@@ -47,6 +47,9 @@ public class ReviewCalendarDeadlineReader {
 	}
 
 	private static int dayOf(BufferedImage image, Pill pill) {
+		if (opensPeriod(image, pill)) {
+			return -1;
+		}
 		int x0 = Math.max(0, pill.x - 20);
 		int x1 = Math.min(image.getWidth(), pill.x + pill.width + 320);
 		List<Band> chain = dateChain(image, x0, x1, pill);
@@ -294,6 +297,44 @@ public class ReviewCalendarDeadlineReader {
 			}
 		}
 		return best;
+	}
+
+	/**
+	 * A chip with a bar continuing to its right marks the start of a period,
+	 * such as 발표 before 리뷰. That chip is not the review deadline.
+	 */
+	private static boolean opensPeriod(BufferedImage image, Pill pill) {
+		int y = pill.centerY();
+		if (y < 0 || y >= image.getHeight()) {
+			return false;
+		}
+		int colored = 0;
+		int gap = 0;
+		int start = Math.min(image.getWidth(), pill.x + pill.width + 2);
+		int end = Math.min(image.getWidth(), start + 180);
+		for (int x = start; x < end; x++) {
+			if (filled(image.getRGB(x, y))) {
+				colored++;
+				gap = 0;
+				if (colored >= 40) {
+					return true;
+				}
+			}
+			else {
+				gap++;
+				if (gap > 14) {
+					break;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean filled(int rgb) {
+		int red = (rgb >> 16) & 0xff;
+		int green = (rgb >> 8) & 0xff;
+		int blue = rgb & 0xff;
+		return red < 210 || green < 210 || blue < 210;
 	}
 
 	private static boolean dark(int rgb) {
