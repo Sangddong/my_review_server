@@ -102,7 +102,7 @@ class OpenAiVisionExperienceExtractorTest {
 	void dropsCategoryTagsAndAddsHttpsToABareAddress() {
 		server.expect(requestTo("https://api.openai.com/v1/chat/completions"))
 			.andRespond(withSuccess("""
-				{"choices":[{"message":{"content":"{\\"name\\":\\"성수점\\",\\"experienceType\\":\\"VISIT\\",\\"reviewDeadline\\":\\"2026-11-22\\",\\"platformNames\\":[\\"블로그\\",\\"맛집\\",\\"CP\\",\\"방문형\\"],\\"detailLink\\":\\"reviewnote.co.kr/campaigns/1510284\\"}"}}]}
+				{"choices":[{"message":{"content":"{\\"name\\":\\"성수점\\",\\"experienceType\\":\\"VISIT\\",\\"reviewDeadline\\":\\"2026-11-22\\",\\"platformNames\\":[\\"블로그\\",\\"맛집\\",\\"CP\\",\\"방문형\\",\\"예약필수\\"],\\"detailLink\\":\\"reviewnote.co.kr/campaigns/1510284\\"}"}}]}
 				""", MediaType.APPLICATION_JSON));
 
 		ExtractedExperienceDraft draft = extractor.extract(new ScreenshotImage(new byte[] {9}, "image/png"));

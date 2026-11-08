@@ -46,7 +46,7 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 		- name: the large campaign title. Ignore site chrome and navigation. null if there is no title.
 		- experienceType: VISIT when a tag says 방문형, DELIVERY when it says 배송형, PRESS when it says 기자단. null if none of those tags are visible.
 		- reviewDeadline: the last day the user must publish the review, as YYYY-MM-DD. This is the review deadline, not the application deadline and not the winner announcement. If the page shows a range for writing or submitting the review, such as 리뷰 기간, 리뷰 등록 기간, or 콘텐츠 등록 기간, use the end date. A two-digit year such as 26 means 2026. A single date labeled 리뷰 마감 or 콘텐츠 등록 마감 is that day. 신청 마감, 모집 마감, 지원 마감, and 신청 기간 are application deadlines and must not be used. 발표, 발표 날짜, 선정, and 당첨 are when winners are announced and must not be used. Do not choose a date from color or calendar position alone. null when the review deadline cannot be told apart from those other dates.
-		- platformNames: every place the user must publish the review. Sites show this differently. It may be a chip under the title, a sentence, or a label such as 블로그, 네이버 블로그, or 네이버블로그. It may also be only a channel icon, with no text. If text is visible, copy that text. If a recognizable channel icon has no text, use the channel it depicts, such as 네이버 블로그, 인스타그램, 유튜브, 릴스, 숏츠, or 클립. Do not invent a channel for an icon you cannot identify. 방문형, 배송형, 기자단, 맛집, and 카페 are not channels. Empty array if no channel is visible.
+		- platformNames: every place the user must publish the review. Sites show this differently. It may be a chip under the title, a sentence, or a label such as 블로그, 네이버 블로그, or 네이버블로그. It may also be only a channel icon, with no text, in the row under the campaign title. If text is visible, copy that text. If a recognizable channel icon has no text, use the channel it depicts, such as 네이버 블로그, 인스타그램, 유튜브, 릴스, 숏츠, or 클립. A green rounded square with a white speech bubble is 네이버 블로그. Do not add a channel that has no icon and no text. A category or status chip beside the icon, such as 방문형, 배송형, 기자단, 맛집, 카페, or 예약필수, is not a channel and does not replace the icon. Empty array only when no channel text and no channel icon are visible.
 		- detailLink: the address-bar URL of the campaign page, including https://. null if no URL is visible.
 		Do not include a reservation date, reservation time, visit schedule, reward, or any other key.
 		""";
@@ -68,7 +68,9 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 		"카페",
 		"뷰티",
 		"cp",
-		"지역"
+		"지역",
+		"예약필수",
+		"예약 필수"
 	);
 	private static final Logger log = LoggerFactory.getLogger(OpenAiVisionExperienceExtractor.class);
 
