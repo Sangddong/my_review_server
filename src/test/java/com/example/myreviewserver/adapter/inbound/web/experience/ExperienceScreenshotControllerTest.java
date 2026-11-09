@@ -58,7 +58,7 @@ class ExperienceScreenshotControllerTest {
 	void returnsExtractedFieldsWithoutReservation() throws Exception {
 		User user = userRepository.save(User.create("shot@test.com", "shotUser"));
 		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
-		when(visionExperienceExtractor.extract(any())).thenReturn(new ExtractedExperienceDraft(
+		when(visionExperienceExtractor.extract(any(), any())).thenReturn(new ExtractedExperienceDraft(
 			"버질스퀘어 성수",
 			ExperienceType.VISIT,
 			LocalDate.of(2026, 11, 13),
@@ -94,7 +94,7 @@ class ExperienceScreenshotControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.message").value("image is required"));
 
-		verify(visionExperienceExtractor, never()).extract(any());
+		verify(visionExperienceExtractor, never()).extract(any(), any());
 	}
 
 	@Test
@@ -109,7 +109,7 @@ class ExperienceScreenshotControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("unsupported image"));
 
-		verify(visionExperienceExtractor, never()).extract(any());
+		verify(visionExperienceExtractor, never()).extract(any(), any());
 	}
 
 	private static MockMultipartFile pngFile() throws Exception {

@@ -94,8 +94,37 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 		this.restClient = restClient;
 	}
 
+	static String promptFor(List<String> userPlatformNames) {
+		StringBuilder prompt = new StringBuilder(PROMPT);
+		prompt.append("\nThe user already defined these review platforms:\n");
+		boolean any = false;
+		if (userPlatformNames != null) {
+			for (String raw : userPlatformNames) {
+				if (raw == null) {
+					continue;
+				}
+				String name = raw.replace('\n', ' ').replace('\r', ' ').trim();
+				if (name.isEmpty()) {
+					continue;
+				}
+				if (name.length() > PLATFORM_NAME_MAX_LENGTH) {
+					name = name.substring(0, PLATFORM_NAME_MAX_LENGTH);
+				}
+				prompt.append("- ").append(name).append('\n');
+				any = true;
+			}
+		}
+		if (!any) {
+			prompt.append("(none)\n");
+		}
+		prompt.append("""
+			Use that list as a reference when deciding platformNames. Compare the page's labels with these names. If a printed label is a shorter form, or the same words without spaces, return the matching name from the list. Do not return a name from the list when the page does not require that place. If the page requires a place that matches none of these names, copy the page's own words.
+			""");
+		return prompt.toString();
+	}
+
 	@Override
-	public ExtractedExperienceDraft extract(ScreenshotImage image) {
+	public ExtractedExperienceDraft extract(ScreenshotImage image, List<String> userPlatformNames) {
 		if (properties.getApiKey() == null || properties.getApiKey().isBlank()) {
 			throw new DomainException("OpenAI is not configured");
 		}
@@ -110,7 +139,7 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 
 		Map<String, Object> textPart = new LinkedHashMap<>();
 		textPart.put("type", "text");
-		textPart.put("text", PROMPT);
+		textPart.put("text", promptFor(userPlatformNames));
 
 		Map<String, Object> imageUrl = new LinkedHashMap<>();
 		imageUrl.put("url", dataUrl);

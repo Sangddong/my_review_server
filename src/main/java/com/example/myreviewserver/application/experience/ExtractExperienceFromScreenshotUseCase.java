@@ -1,6 +1,8 @@
 package com.example.myreviewserver.application.experience;
 
+import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,18 +18,26 @@ public class ExtractExperienceFromScreenshotUseCase {
 
 	private final ScreenshotImageResizer resizer;
 	private final VisionExperienceExtractor extractor;
+	private final PlatformRepository platformRepository;
 
 	public ExtractExperienceFromScreenshotUseCase(
 		ScreenshotImageResizer resizer,
-		VisionExperienceExtractor extractor
+		VisionExperienceExtractor extractor,
+		PlatformRepository platformRepository
 	) {
 		this.resizer = resizer;
 		this.extractor = extractor;
+		this.platformRepository = platformRepository;
 	}
 
-	public ExtractedExperienceDraft extract(byte[] imageBytes) {
+	public ExtractedExperienceDraft extract(Long userId, byte[] imageBytes) {
 		ScreenshotImage image = resizer.resize(imageBytes);
-		ExtractedExperienceDraft draft = extractor.extract(image);
+		List<String> platformNames = platformRepository
+			.findActiveByUserIdOrderBySortOrderAscIdAsc(userId)
+			.stream()
+			.map(platform -> platform.getName())
+			.toList();
+		ExtractedExperienceDraft draft = extractor.extract(image, platformNames);
 		if (draft == null) {
 			throw new DomainException("screenshot extraction failed");
 		}

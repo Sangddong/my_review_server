@@ -62,7 +62,7 @@ public class ExperienceScreenshotController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "인증 필요")
 	})
 	public ApiResponse<ExtractedExperienceResponse> fromScreenshot(@RequestPart("image") MultipartFile image) {
-		CurrentUser.requireUserId();
+		Long userId = CurrentUser.requireUserId();
 		if (image == null || image.isEmpty()) {
 			throw new DomainException("image is required");
 		}
@@ -74,7 +74,7 @@ public class ExperienceScreenshotController {
 			throw new DomainException("image is required");
 		}
 		return ApiResponse.ok(ExtractedExperienceResponse.from(
-			extractExperienceFromScreenshotUseCase.extract(bytes)
+			extractExperienceFromScreenshotUseCase.extract(userId, bytes)
 		));
 	}
 }
