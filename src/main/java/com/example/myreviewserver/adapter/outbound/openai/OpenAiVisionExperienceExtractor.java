@@ -46,7 +46,7 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 		- name: the large campaign title. Ignore site chrome and navigation. null if there is no title.
 		- experienceType: VISIT when a tag says 방문형, DELIVERY when it says 배송형, PRESS when it says 기자단. null if none of those tags are visible.
 		- reviewDeadline: the last day the user must publish the review, as YYYY-MM-DD. This is the review deadline, not the application deadline and not the winner announcement. If the page shows a range for writing or submitting the review, such as 리뷰 기간, 리뷰 등록 기간, or 콘텐츠 등록 기간, use the end date. A two-digit year such as 26 means 2026. A single date labeled 리뷰 마감 or 콘텐츠 등록 마감 is that day. 신청 마감, 모집 마감, 지원 마감, and 신청 기간 are application deadlines and must not be used. 발표, 발표 날짜, 선정, and 당첨 are when winners are announced and must not be used. Do not choose a date from color or calendar position alone. null when the review deadline cannot be told apart from those other dates.
-		- platformNames: every place the user must publish the review. Interpret the page yourself. Sites do not share a layout, a color, an icon shape, or a fixed set of names. Copy the words the page uses for those places. 방문형, 배송형, 기자단, 맛집, and 카페 describe the kind of campaign, not where the review is published. A note about preferred skills is not a required publishing place. Empty array when you cannot tell where the review must be published.
+		- platformNames: the user's saved platform tags that this page requires. First read every place the page says the user must publish the review. Those words are the extracted labels. Then compare each extracted label with the user's saved platform tags listed below. Sites do not share a layout, a color, an icon shape, or a fixed set of names. If an extracted label is the same words, a shorter form, or the same words without spaces as a saved tag, include that saved tag's name. If an extracted label matches none of the saved tags, include the page's own words. Do not include a saved tag that no extracted label requires. 방문형, 배송형, 기자단, 맛집, and 카페 describe the kind of campaign, not where the review is published. A note about preferred skills is not a required publishing place. Empty array when you cannot tell where the review must be published.
 		- detailLink: the address-bar URL of the campaign page, including https://. null if no URL is visible.
 		Do not include a reservation date, reservation time, visit schedule, reward, or any other key.
 		""";
@@ -96,7 +96,7 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 
 	static String promptFor(List<String> userPlatformNames) {
 		StringBuilder prompt = new StringBuilder(PROMPT);
-		prompt.append("\nThe user already defined these review platforms:\n");
+		prompt.append("\nThe user's saved platform tags:\n");
 		boolean any = false;
 		if (userPlatformNames != null) {
 			for (String raw : userPlatformNames) {
@@ -118,7 +118,7 @@ public class OpenAiVisionExperienceExtractor implements VisionExperienceExtracto
 			prompt.append("(none)\n");
 		}
 		prompt.append("""
-			Use that list as a reference when deciding platformNames. Compare the page's labels with these names. If a printed label is a shorter form, or the same words without spaces, return the matching name from the list. Do not return a name from the list when the page does not require that place. If the page requires a place that matches none of these names, copy the page's own words.
+			Compare the extracted labels with these tags and fill platformNames from that comparison.
 			""");
 		return prompt.toString();
 	}

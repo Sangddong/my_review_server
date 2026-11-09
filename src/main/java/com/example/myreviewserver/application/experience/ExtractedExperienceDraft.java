@@ -13,10 +13,22 @@ public record ExtractedExperienceDraft(
 	ExperienceType experienceType,
 	LocalDate reviewDeadline,
 	List<String> platformNames,
-	String detailLink
+	String detailLink,
+	List<Long> platformIds
 ) {
 
 	public ExtractedExperienceDraft {
 		platformNames = platformNames == null ? List.of() : List.copyOf(platformNames);
+		platformIds = platformIds == null ? List.of() : List.copyOf(platformIds);
+	}
+
+	public ExtractedExperienceDraft(
+		String name,
+		ExperienceType experienceType,
+		LocalDate reviewDeadline,
+		List<String> platformNames,
+		String detailLink
+	) {
+		this(name, experienceType, reviewDeadline, platformNames, detailLink, List.of());
 	}
 }

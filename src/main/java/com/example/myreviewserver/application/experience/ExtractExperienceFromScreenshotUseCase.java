@@ -1,5 +1,6 @@
 package com.example.myreviewserver.application.experience;
 
+import com.example.myreviewserver.domain.platform.Platform;
 import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
 import java.util.List;
@@ -32,15 +33,19 @@ public class ExtractExperienceFromScreenshotUseCase {
 
 	public ExtractedExperienceDraft extract(Long userId, byte[] imageBytes) {
 		ScreenshotImage image = resizer.resize(imageBytes);
-		List<String> platformNames = platformRepository
-			.findActiveByUserIdOrderBySortOrderAscIdAsc(userId)
-			.stream()
-			.map(platform -> platform.getName())
-			.toList();
+		List<Platform> platforms = platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(userId);
+		List<String> platformNames = platforms.stream().map(Platform::getName).toList();
 		ExtractedExperienceDraft draft = extractor.extract(image, platformNames);
 		if (draft == null) {
 			throw new DomainException("screenshot extraction failed");
 		}
-		return draft;
+		return new ExtractedExperienceDraft(
+			draft.name(),
+			draft.experienceType(),
+			draft.reviewDeadline(),
+			draft.platformNames(),
+			draft.detailLink(),
+			UserPlatformMatcher.matchIds(platforms, draft.platformNames())
+		);
 	}
 }

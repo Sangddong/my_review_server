@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -25,8 +26,10 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 	void sendsAResizedImageAndReturnsTheDraft() throws IOException {
 		RecordingExtractor extractor = new RecordingExtractor();
 		PlatformRepository platforms = mock(PlatformRepository.class);
-		when(platforms.findActiveByUserIdOrderBySortOrderAscIdAsc(7L))
-			.thenReturn(List.of(Platform.create(7L, "네이버 영수증 리뷰", "#2db400", 0)));
+		when(platforms.findActiveByUserIdOrderBySortOrderAscIdAsc(7L)).thenReturn(List.of(
+			platform(15L, "네이버 영수증 리뷰"),
+			platform(3L, "클립")
+		));
 		ExtractExperienceFromScreenshotUseCase useCase = new ExtractExperienceFromScreenshotUseCase(
 			new ScreenshotImageResizer(),
 			extractor,
@@ -35,8 +38,10 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 
 		ExtractedExperienceDraft draft = useCase.extract(7L, png(2400, 1200));
 
-		assertThat(draft).isEqualTo(extractor.draft);
-		assertThat(extractor.platformNames).containsExactly("네이버 영수증 리뷰");
+		assertThat(draft.name()).isEqualTo(extractor.draft.name());
+		assertThat(draft.platformNames()).containsExactly("영수증리뷰", "클립");
+		assertThat(draft.platformIds()).containsExactly(15L, 3L);
+		assertThat(extractor.platformNames).containsExactly("네이버 영수증 리뷰", "클립");
 		BufferedImage sent = ImageIO.read(new ByteArrayInputStream(extractor.image.bytes()));
 		assertThat(Math.max(sent.getWidth(), sent.getHeight())).isLessThanOrEqualTo(1280);
 		assertThat(sent.getWidth()).isEqualTo(1280);
@@ -57,6 +62,10 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 		assertThat(extractor.image).isNull();
 	}
 
+	private static Platform platform(Long id, String name) {
+		return Platform.restore(id, 7L, name, "#03c75a", 0, null, null, Instant.EPOCH, Instant.EPOCH);
+	}
+
 	private static byte[] png(int width, int height) throws IOException {
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -72,7 +81,7 @@ class ExtractExperienceFromScreenshotUseCaseTest {
 			"버질스퀘어 성수",
 			ExperienceType.VISIT,
 			LocalDate.of(2026, 11, 13),
-			List.of("네이버 블로그", "클립"),
+			List.of("영수증리뷰", "클립"),
 			null
 		);
 
