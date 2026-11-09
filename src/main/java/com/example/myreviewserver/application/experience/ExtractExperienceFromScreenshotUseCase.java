@@ -1,6 +1,9 @@
 package com.example.myreviewserver.application.experience;
 
+import com.example.myreviewserver.domain.platform.Platform;
+import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.shared.DomainException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,21 +19,33 @@ public class ExtractExperienceFromScreenshotUseCase {
 
 	private final ScreenshotImageResizer resizer;
 	private final VisionExperienceExtractor extractor;
+	private final PlatformRepository platformRepository;
 
 	public ExtractExperienceFromScreenshotUseCase(
 		ScreenshotImageResizer resizer,
-		VisionExperienceExtractor extractor
+		VisionExperienceExtractor extractor,
+		PlatformRepository platformRepository
 	) {
 		this.resizer = resizer;
 		this.extractor = extractor;
+		this.platformRepository = platformRepository;
 	}
 
-	public ExtractedExperienceDraft extract(byte[] imageBytes) {
+	public ExtractedExperienceDraft extract(Long userId, byte[] imageBytes) {
 		ScreenshotImage image = resizer.resize(imageBytes);
-		ExtractedExperienceDraft draft = extractor.extract(image);
+		List<Platform> platforms = platformRepository.findActiveByUserIdOrderBySortOrderAscIdAsc(userId);
+		List<String> platformNames = platforms.stream().map(Platform::getName).toList();
+		ExtractedExperienceDraft draft = extractor.extract(image, platformNames);
 		if (draft == null) {
 			throw new DomainException("screenshot extraction failed");
 		}
-		return draft;
+		return new ExtractedExperienceDraft(
+			draft.name(),
+			draft.experienceType(),
+			draft.reviewDeadline(),
+			draft.platformNames(),
+			draft.detailLink(),
+			UserPlatformMatcher.matchIds(platforms, draft.platformNames())
+		);
 	}
 }

@@ -12,6 +12,8 @@ import com.example.myreviewserver.adapter.inbound.security.JwtTokenProvider;
 import com.example.myreviewserver.application.experience.ExtractedExperienceDraft;
 import com.example.myreviewserver.application.experience.VisionExperienceExtractor;
 import com.example.myreviewserver.domain.experience.ExperienceType;
+import com.example.myreviewserver.domain.platform.Platform;
+import com.example.myreviewserver.domain.platform.PlatformRepository;
 import com.example.myreviewserver.domain.user.User;
 import com.example.myreviewserver.domain.user.UserRepository;
 import java.awt.image.BufferedImage;
@@ -44,6 +46,9 @@ class ExperienceScreenshotControllerTest {
 	@Autowired
 	UserRepository userRepository;
 
+	@Autowired
+	PlatformRepository platformRepository;
+
 	@MockitoBean
 	VisionExperienceExtractor visionExperienceExtractor;
 
@@ -57,8 +62,10 @@ class ExperienceScreenshotControllerTest {
 	@Test
 	void returnsExtractedFieldsWithoutReservation() throws Exception {
 		User user = userRepository.save(User.create("shot@test.com", "shotUser"));
+		Platform blog = platformRepository.save(Platform.create(user.getId(), "네이버 블로그", "#03c75a", 0));
+		Platform clip = platformRepository.save(Platform.create(user.getId(), "클립", "#00c73c", 1));
 		String jwt = jwtTokenProvider.createAccessToken(user.getId(), user.getNickname());
-		when(visionExperienceExtractor.extract(any())).thenReturn(new ExtractedExperienceDraft(
+		when(visionExperienceExtractor.extract(any(), any())).thenReturn(new ExtractedExperienceDraft(
 			"버질스퀘어 성수",
 			ExperienceType.VISIT,
 			LocalDate.of(2026, 11, 13),
@@ -76,6 +83,8 @@ class ExperienceScreenshotControllerTest {
 			.andExpect(jsonPath("$.data.reviewDeadline").value("2026-11-13"))
 			.andExpect(jsonPath("$.data.platformNames[0]").value("네이버 블로그"))
 			.andExpect(jsonPath("$.data.platformNames[1]").value("클립"))
+			.andExpect(jsonPath("$.data.platformIds[0]").value(blog.getId()))
+			.andExpect(jsonPath("$.data.platformIds[1]").value(clip.getId()))
 			.andExpect(jsonPath("$.data.detailLink").value("https://www.reviewnote.co.kr/campaigns/1489015"))
 			.andExpect(jsonPath("$.data.reservationDate").doesNotExist())
 			.andExpect(jsonPath("$.data.reservationTime").doesNotExist());
@@ -94,7 +103,7 @@ class ExperienceScreenshotControllerTest {
 			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.message").value("image is required"));
 
-		verify(visionExperienceExtractor, never()).extract(any());
+		verify(visionExperienceExtractor, never()).extract(any(), any());
 	}
 
 	@Test
@@ -109,7 +118,7 @@ class ExperienceScreenshotControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value("unsupported image"));
 
-		verify(visionExperienceExtractor, never()).extract(any());
+		verify(visionExperienceExtractor, never()).extract(any(), any());
 	}
 
 	private static MockMultipartFile pngFile() throws Exception {
