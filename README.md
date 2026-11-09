@@ -29,6 +29,31 @@
 | Frontend | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white) ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=reactrouter&logoColor=white) ![Capacitor](https://img.shields.io/badge/Capacitor-119EFF?style=flat-square&logo=capacitor&logoColor=white) |
 <br >
 
+### ✔️ 왜 스크린샷 읽기에 **OCR**보다 **OpenAI Vision**을 사용했는가?
+  > **❓첫 방향은 화면에 적힌 글자를 옮기는 OCR**
+  - 체험단 사이트마다 배치와 문구가 다릅니다. 한 화면에 신청 마감, 발표, 리뷰 마감이 같이 있고, 채널은 `블로그`처럼 적혀 있거나 아이콘만 있는 경우도 있습니다.
+  - 스크린샷에서 저장할 값은 체험 이름, 체험 유형(방문형·배송형·기자단), 리뷰 마감일, 꼭 올려야 하는 채널, 상세 링크입니다. 맛집·카페 같은 분류와 우대 사항은 채널이 아닙니다.
+  - OCR은 적힌 글자를 잘 옮기고, 없는 글자를 만들지 않습니다. 서버 안에서 처리할 수 있어 스크린샷을 밖으로 보내지 않아도 되고, 호출 비용과 응답 시간도 짧습니다.
+  - 다만 결과는 글자 목록입니다. 어떤 날짜가 리뷰 마감이고 어떤 글자가 필수 채널인지는 사이트마다 규칙을 다시 만들어야 하고, 글자가 없는 아이콘은 읽지 못합니다.
+
+  > **💡 OpenAI Vision을 선택한 이유와 효과**
+  - 이미지와 질문을 한 번에 보내, 필요한 항목을 화면의 의미로 고르게 합니다. 사이트별 화면 규칙을 코드에 넣지 않아도 됩니다.
+  - 스프링은 이미지를 줄여 모델에 묻고, 돌아온 초안만 등록 화면에 돌려줍니다. 마감일을 다시 계산하지 않고, 이 단계에서는 스크린샷과 체험을 저장하지 않습니다. 저장은 사용자가 내용을 확인한 뒤 합니다.
+
+  > **🆚 OCR과 OpenAI Vision의 비교** <br >
+
+  || OCR | OpenAI Vision |
+  |---|---|---|
+  | 하는 일 | 화면에 적힌 글자를 옮김 | 글자를 읽고 저장할 값을 고름 |
+  | 잘 맞는 화면 | 양식이 같은 문서 | 사이트마다 문구와 배치가 다른 체험단 페이지 |
+  | 작은 글자 | 빠뜨릴 가능성이 낮음 | 작은 글자를 놓칠 수 있음 |
+  | 없는 내용 | 만들지 않음 | 옆의 우대 사항을 필수 채널로 읽을 수 있음 |
+  | 글자 없는 아이콘 | 읽지 못함 | 맥락으로 읽을 여지가 있음 |
+  | 운영 | 서버 안에서 처리 | 이미지 한 장당 모델 호출, 스크린샷이 OpenAI로 전달 |
+
+  이 서비스에서 어려운 일은 글자를 베끼는 일이 아니라, 서로 다른 사이트에서 리뷰 마감과 필수 채널을 구분하는 일입니다. 그래서 스크린샷 읽기는 OpenAI Vision을 중심으로 두었습니다.
+<br >
+
 ### ✔️ 왜 앱 푸시를 위해 **FCM**을 사용했는가?
   > **❓첫 방향성은 MQTT!**
   - 이전 회사에서 Saas 개발 시 화면에 알림을 띄우기 위해 MQTT를 사용했던 기억이 있어, 앱 푸시 기능을 개발하기 전 MQTT로 서버에서 전부 구현하여 관리하는 방향을 고려했습니다.
